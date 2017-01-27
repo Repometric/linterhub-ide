@@ -1,0 +1,26 @@
+{
+  "name": "linterhub-ide",
+  "version": "0.0.1",
+  "description": "Small package with shared classes for all linterhub extensions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Oleg Safonov <by.xsofa@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/repometric/linterhub-ide"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "fs": "0.0.1-security",
+    "http-proxy-agent": "^1.0.0",
+    "https": "^1.0.0",
+    "https-proxy-agent": "^1.0.0",
+    "os": "^0.1.1",
+    "path": "^0.12.7",
+    "process": "^0.11.9",
+    "url": "^0.11.0"
+  }
+}
