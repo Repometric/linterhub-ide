@@ -1,0 +1,24 @@
+{
+    "version": "1.5.0-alpha",
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "noImplicitAny": false,
+        "removeComments": true,
+        "noLib": false,
+        "preserveConstEnums": true,
+        "declaration": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "outDir": "../js"
+    },
+    "filesGlob": [
+        "./**/*.ts",
+        "!./node_modules/**/*.ts"
+    ],
+    "files": [
+        "./proxy.ts",
+        "./platform.ts",
+        "./index.ts",
+        "./util.ts"
+    ]
+}
