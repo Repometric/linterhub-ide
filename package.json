@@ -1,8 +1,9 @@
 {
   "name": "linterhub-ide",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "js/index.js",
+  "typings": "js/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

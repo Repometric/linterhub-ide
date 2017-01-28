@@ -1,42 +1,29 @@
-import * as cp from 'child_process';
-
-/**
-  * Function that execute command (used to communicate with cli)
-  * @method executeChildProcess
-  * @param {string} command Command to execute
-  * @param {string} workingDirectory Working directory of process
-  * @returns {Promise<string>} Returns stdout
-  */
-export function executeChildProcess(command: string, workingDirectory: string = null): Promise<string> {
-    // TODO: Return ChildProcess in order to stop it when needed
+"use strict";
+const cp = require("child_process");
+function executeChildProcess(command, workingDirectory = null) {
     let promise = new Promise((resolve, reject) => {
-        // TODO: Use spawn and buffers.
         cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
             let execError = stderr.toString();
             if (error) {
                 reject(new Error(error.message));
-            } else if (execError !== '') {
+            }
+            else if (execError !== '') {
                 reject(new Error(execError));
-            } else {
+            }
+            else {
                 resolve(stdout);
             }
         });
     });
-
     return promise;
 }
-
-/**
-  * Class that caches values
-  * @class Cacheable
-  */
-export class Cacheable {
-    private value: {} = null;
-    private action: () => Promise<{}>;
-    constructor(action: () => Promise<{}>) {
+exports.executeChildProcess = executeChildProcess;
+class Cacheable {
+    constructor(action) {
+        this.value = null;
         this.action = action;
     }
-    getValue(): Promise<{}> {
+    getValue() {
         let that = this;
         let promise = new Promise((resolve, reject) => {
             if (that.value == null) {
@@ -44,10 +31,12 @@ export class Cacheable {
                     that.value = value;
                     resolve(that.value);
                 }).catch(error => reject(error));
-            } else {
+            }
+            else {
                 resolve(that.value);
             }
         });
         return promise;
     }
 }
+exports.Cacheable = Cacheable;
