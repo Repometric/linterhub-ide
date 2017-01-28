@@ -1,5 +1,12 @@
 import * as cp from 'child_process';
 
+/**
+  * Function that execute command (used to communicate with cli)
+  * @method executeChildProcess
+  * @param {string} command Command to execute
+  * @param {string} workingDirectory Working directory of process
+  * @returns {Promise<string>} Returns stdout
+  */
 export function executeChildProcess(command: string, workingDirectory: string = null): Promise<string> {
     // TODO: Return ChildProcess in order to stop it when needed
     let promise = new Promise((resolve, reject) => {
@@ -19,6 +26,10 @@ export function executeChildProcess(command: string, workingDirectory: string = 
     return promise;
 }
 
+/**
+  * Class that caches values
+  * @class Cacheable
+  */
 export class Cacheable {
     private value: {} = null;
     private action: () => Promise<{}>;

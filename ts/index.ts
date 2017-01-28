@@ -1,7 +1,5 @@
-import * as i_platform from "./platform";
-import * as i_util from "./util";
-import * as i_proxy from "./proxy";
-
-export var platform = i_platform;
-export var proxy = i_proxy;
-export var util = i_util;
+export { LinuxDistribution, PlatformInformation } from './platform';
+export { Cacheable, executeChildProcess } from './util';
+export { getProxyAgent } from './proxy';
+export { LinterhubMode, LinterhubArgs, LinterhubCli, LinterhubCliLazy, LoggerInterface, StatusInterface } from './linterhub-cli';
+export { LinterhubPackage, NetworkHelper, install, getDockerVersion, getDotnetVersion, downloadDock } from './linterhub-installer';
