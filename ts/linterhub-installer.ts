@@ -52,7 +52,7 @@ export class LinterhubPackage {
         return this.getPackageFullName() + ".zip";
     }
     getPackageFullFileName(): string {
-        return this.folder + this.getPackageFullName();
+        return path.join(this.folder, this.getPackageFileName());
     }
     getPackageUrl(): string {
         return this.prefix + this.version + "/" + this.getPackageFileName();
