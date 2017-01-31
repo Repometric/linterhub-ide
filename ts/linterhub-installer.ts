@@ -5,7 +5,8 @@ import { parse as parseUrl } from 'url';
 import { getProxyAgent } from './proxy';
 import { PlatformInformation } from './platform';
 import { executeChildProcess } from './util'
-import { LinterhubMode, StatusInterface, LoggerInterface} from './linterhub-cli'
+import { LinterhubMode } from './linterhub-cli'
+import { LoggerInterface, StatusInterface } from './integration'
 import { mkdirp } from 'mkdirp';
 import * as yauzl from 'yauzl';
 
@@ -112,7 +113,7 @@ export class NetworkHelper {
                     let newPercentage = Math.ceil(100 * (downloadedBytes / packageSize));
                     if (newPercentage !== downloadPercentage) {
                         downloadPercentage = newPercentage;
-                        status.update('Downloading.. (' + newPercentage + "%)");
+                        status.update(null, true, 'Downloading.. (' + newPercentage + "%)");
                     }
                 });
 

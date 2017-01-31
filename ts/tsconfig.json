@@ -21,6 +21,8 @@
         "./index.ts",
         "./util.ts",
         "./linterhub-installer.ts",
-        "./linterhub-cli.ts"
+        "./linterhub-cli.ts",
+        "./types.ts",
+        "./integration.ts"
     ]
 }
