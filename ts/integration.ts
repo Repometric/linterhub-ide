@@ -88,10 +88,11 @@ export class Integration {
         this.linterhub_version = api.linterhub_version;
         this.api = api;
         this.settings = settings;
+        this.onReady = this.initializeLinterhub();
     }
 
     install(): Promise<string> {
-        this.status.update({ id: this.systemId }, true);
+        this.status.update({ id: this.systemId }, true, "Start install process..");
 
         return getDotnetVersion()
             .then(() => { this.settings.linterhub.mode = LinterhubMode.dotnet; })
@@ -111,7 +112,7 @@ export class Integration {
                         return [];
                     })
                     .then((result) => {
-                        this.status.update({ id: this.systemId }, false);
+                        this.status.update({ id: this.systemId }, false, "Active");
                         return result;
                     });
             });
@@ -136,12 +137,12 @@ export class Integration {
     analyze(): Promise<any> {
         return this.onReady
             .then(() => { this.logger.info(`Analyze project.`) })
-            .then(() => { this.status.update({ id: this.project }, true) })
+            .then(() => { this.status.update({ id: this.project }, true, "Analyzing project...") })
             .then(() => this.linterhub.analyze())
             .then((data: string) => { return this.api.sendDiagnostics(data) })
             .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`) })
             .then((data) => {
-                this.status.update({ id: this.project }, false);
+                this.status.update({ id: this.project }, false, "Active");
                 this.logger.info(`Finish analyze project.`)
                 return data;
             })
@@ -165,14 +166,14 @@ export class Integration {
 
         return this.onReady
             .then(() => this.logger.info(`Analyze file '${path}'.`))
-            .then(() => this.status.update({ id: path }, true))
+            .then(() => this.status.update({ id: path }, true, "Analyzing file..."))
             .then(() => this.linterhub.analyzeFile(this.api.normalizePath(path)))
             .then((data: string) => {
                 return this.api.sendDiagnostics(data, document)
             })
             .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`) })
             .then((data) => {
-                this.status.update({ id: path }, false)
+                this.status.update({ id: path }, false, "Active")
                 this.logger.info(`Finish analyze file '${path}'.`)
                 return data;
             });
@@ -183,7 +184,7 @@ export class Integration {
      */
     catalog(): Promise<LinterResult[]> {
         return this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true))
+            .then(() => this.status.update({ id: this.systemId }, true, "Getting linters catalog.."))
             .then(() => this.linterhub.catalog())
             .then((data: string) => {
                 let json: any = JSON.parse(data);
@@ -195,7 +196,7 @@ export class Integration {
                 return [];
             })
             .then((result) => {
-                this.status.update({ id: this.systemId }, false);
+                this.status.update({ id: this.systemId }, false, "Active");
                 return result;
             });
     }
@@ -206,10 +207,10 @@ export class Integration {
      */
     activate(name: string): Promise<string> {
         return this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true))
+            .then(() => this.status.update({ id: this.systemId }, true, "Activating " + name + "..."))
             .then(() => this.linterhub.activate(name))
             .catch((reason) => { this.logger.error(`Error activate '${reason}.toString()'.`) })
-            .then(() => this.status.update({ id: this.systemId }, false))
+            .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
     /**
