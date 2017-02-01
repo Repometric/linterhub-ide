@@ -61,24 +61,33 @@ export interface Settings {
     [key: string]: any;
 }
 
-export abstract class Integration {
+export class Integration {
     protected systemId: string = "_system";
-    protected abstract linterhub_version: string;
+    protected linterhub_version: string;
     protected linterhub: LinterhubCliLazy;
     protected project: string;
-    protected abstract logger: LoggerInterface;
-    protected abstract status: StatusInterface;
+    protected logger: LoggerInterface;
+    protected status: StatusInterface;
 
     protected onReady: Promise<{}>;
 
-    protected abstract sendDiagnostics(data: string, document?: any): any[];
+    protected settings: any;
+    protected api: any;
 
-    protected abstract settings: any;
-
-    protected initializeLinterhub() {
+    public initializeLinterhub() {
         this.linterhub = new LinterhubCliLazy(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
         this.onReady = this.linterhub.version();
         return this.onReady;
+    }
+
+    constructor(api: any, settings: any)
+    {
+        this.logger = api.logger;
+        this.status = api.status;
+        this.project = api.project;
+        this.linterhub_version = api.linterhub_version;
+        this.api = api;
+        this.settings = settings;
     }
 
     install(): Promise<string> {
@@ -117,7 +126,7 @@ export abstract class Integration {
             .then(() => { this.logger.info(`Analyze project.`) })
             .then(() => { this.status.update({ id: this.project }, true) })
             .then(() => this.linterhub.analyze())
-            .then((data: string) => { return this.sendDiagnostics(data) })
+            .then((data: string) => { return this.api.sendDiagnostics(data) })
             .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`) })
             .then((data) => {
                 this.status.update({ id: this.project }, false);
@@ -126,7 +135,6 @@ export abstract class Integration {
             })
     }
 
-    protected abstract normalizePath(path: string): string;
     /**
      * Analyze single file.
      *
@@ -146,9 +154,9 @@ export abstract class Integration {
         return this.onReady
             .then(() => this.logger.info(`Analyze file '${path}'.`))
             .then(() => this.status.update({ id: path }, true))
-            .then(() => this.linterhub.analyzeFile(this.normalizePath(path)))
+            .then(() => this.linterhub.analyzeFile(this.api.normalizePath(path)))
             .then((data: string) => {
-                return this.sendDiagnostics(data, document)
+                return this.api.sendDiagnostics(data, document)
             })
             .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`) })
             .then((data) => {
