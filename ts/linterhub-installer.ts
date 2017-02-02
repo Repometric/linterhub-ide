@@ -16,7 +16,7 @@ import * as yauzl from 'yauzl';
   */
 export class LinterhubPackage {
     readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
-    private version: string = "0.3.1";
+    private version: string;
     private info: PlatformInformation;
     private native: boolean;
     private folder: string;
@@ -158,7 +158,7 @@ export function install(mode: LinterhubMode, folder: string, proxy: string, stri
             let networkHelper = new NetworkHelper();
             return networkHelper.downloadFile(helper.getPackageUrl(), helper.getPackageFullFileName(), proxy, strictSSL, status).then(() => {
                 log.info("File downloaded");
-                return installFile(helper.getPackageFullFileName(), folder, log).then((folder) => {
+                return installFile(helper.getPackageFullFileName(), folder, log).then(() => {
                     return path.resolve(folder, 'bin', helper.getPackageName());
                 });
             });

@@ -1,6 +1,7 @@
 import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli'
 import { getDotnetVersion, install } from './linterhub-installer'
 import { LinterVersionResult, LinterResult } from './types';
+import * as fs from 'fs';
 
 export enum Run {
     none,
@@ -55,8 +56,9 @@ export interface Settings {
     linterhub: {
         enable: boolean;
         run: Run[];
-        mode: LinterhubMode,
-        cliPath: any;
+        mode: LinterhubMode;
+        cliPath: string;
+        cliRoot: string;
     }
     [key: string]: any;
 }
@@ -88,7 +90,12 @@ export class Integration {
         this.linterhub_version = api.linterhub_version;
         this.api = api;
         this.settings = settings;
-        this.onReady = this.initializeLinterhub();
+        if(this.settings.linterhub.cliPath == undefined || this.settings.linterhub.mode == undefined || !fs.existsSync(this.settings.linterhub.cliPath))
+          this.install()
+            .then(() => this.initializeLinterhub())
+            .then(() => this.api.saveConfig(this.settings))
+        else
+          this.onReady = this.initializeLinterhub();
     }
 
     install(): Promise<string> {
@@ -101,18 +108,19 @@ export class Integration {
             .then(() => { this.logger.info(this.settings.linterhub.mode.toString()) })
             .then(() => {
 
-                return install(this.settings.linterhub.mode, __dirname + '/../../', null, true, this.logger, this.status, this.linterhub_version)
+                return install(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, null, true, this.logger, this.status, this.linterhub_version)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
-                        this.initializeLinterhub();
+                        console.log(data);
                         return data;
                     })
                     .catch((reason) => {
                         this.logger.error(`Error catalog '${reason}.toString()'.`);
-                        return [];
+                        return "";
                     })
                     .then((result) => {
                         this.status.update({ id: this.systemId }, false, "Active");
+                        this.settings.linterhub.cliPath = result;
                         return result;
                     });
             });

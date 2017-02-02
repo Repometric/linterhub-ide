@@ -1,6 +1,6 @@
 {
   "name": "linterhub-ide",
-  "version": "0.2.5",
+  "version": "0.2.10",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "js/index.js",
   "typings": "js/index.d.ts",
