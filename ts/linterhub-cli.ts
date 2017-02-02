@@ -1,38 +1,6 @@
 import { Cacheable, executeChildProcess } from './util'
+import { LoggerInterface } from './integration'
 import * as path from 'path';
-
-/**
-  * Describes logger provider
-  * @interface LoggerInterface
-  */
-export interface LoggerInterface {
-  /**
-    * Prints ordinary information
-    * @method info
-    * @param {string} log Text to print
-    */
-  info(log: string);
-
-  /**
-    * Prints errors and warnings
-    * @method error
-    * @param {string} log Text to print
-    */
-  error(log: string);
-}
-
-/**
-  * Describes status provider
-  * @interface StatusInterface
-  */
-export interface StatusInterface {
-  /**
-    * Updates status string
-    * @method update
-    * @param {string} status New status
-    */
-  update(status: string);
-}
 
 /**
   * List of mode how to execute Linterhub Cli

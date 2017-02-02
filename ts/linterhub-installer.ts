@@ -5,7 +5,8 @@ import { parse as parseUrl } from 'url';
 import { getProxyAgent } from './proxy';
 import { PlatformInformation } from './platform';
 import { executeChildProcess } from './util'
-import { LinterhubMode, StatusInterface, LoggerInterface} from './linterhub-cli'
+import { LinterhubMode } from './linterhub-cli'
+import { LoggerInterface, StatusInterface } from './integration'
 import { mkdirp } from 'mkdirp';
 import * as yauzl from 'yauzl';
 
@@ -15,7 +16,7 @@ import * as yauzl from 'yauzl';
   */
 export class LinterhubPackage {
     readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
-    private version: string = "0.3.1";
+    private version: string;
     private info: PlatformInformation;
     private native: boolean;
     private folder: string;
@@ -51,7 +52,7 @@ export class LinterhubPackage {
         return this.getPackageFullName() + ".zip";
     }
     getPackageFullFileName(): string {
-        return this.folder + this.getPackageFullName();
+        return path.join(this.folder, this.getPackageFileName());
     }
     getPackageUrl(): string {
         return this.prefix + this.version + "/" + this.getPackageFileName();
@@ -112,7 +113,7 @@ export class NetworkHelper {
                     let newPercentage = Math.ceil(100 * (downloadedBytes / packageSize));
                     if (newPercentage !== downloadPercentage) {
                         downloadPercentage = newPercentage;
-                        status.update('Downloading.. (' + newPercentage + "%)");
+                        status.update(null, true, 'Downloading.. (' + newPercentage + "%)");
                     }
                 });
 
@@ -157,7 +158,7 @@ export function install(mode: LinterhubMode, folder: string, proxy: string, stri
             let networkHelper = new NetworkHelper();
             return networkHelper.downloadFile(helper.getPackageUrl(), helper.getPackageFullFileName(), proxy, strictSSL, status).then(() => {
                 log.info("File downloaded");
-                return installFile(helper.getPackageFullFileName(), folder, log).then((folder) => {
+                return installFile(helper.getPackageFullFileName(), folder, log).then(() => {
                     return path.resolve(folder, 'bin', helper.getPackageName());
                 });
             });
