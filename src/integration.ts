@@ -82,20 +82,19 @@ export class Integration {
         return this.onReady;
     }
 
-    constructor(api: any, settings: any)
-    {
+    constructor(api: any, settings: any) {
         this.logger = api.logger;
         this.status = api.status;
         this.project = api.project;
         this.linterhub_version = api.linterhub_version;
         this.api = api;
         this.settings = settings;
-        if(this.settings.linterhub.cliPath == undefined || this.settings.linterhub.mode == undefined || !fs.existsSync(this.settings.linterhub.cliPath))
-          this.install()
-            .then(() => this.initializeLinterhub())
-            .then(() => this.api.saveConfig(this.settings))
+        if (this.settings.linterhub.cliPath == undefined || this.settings.linterhub.mode == undefined || !fs.existsSync(this.settings.linterhub.cliPath))
+            this.install()
+                .then(() => this.initializeLinterhub())
+                .then(() => this.api.saveConfig(this.settings))
         else
-          this.onReady = this.initializeLinterhub();
+            this.onReady = this.initializeLinterhub();
     }
 
     install(): Promise<string> {
@@ -164,7 +163,7 @@ export class Integration {
      * @param document The active document.
      */
     analyzeFile(path: string, run: Run = Run.none, document: any = null): Promise<any> {
-        if (this.settings.linterhub.run.indexOf(run) < 0) {
+        if (this.settings.linterhub.run.indexOf(run) < 0 && run != Run.force) {
             return null;
         }
 
