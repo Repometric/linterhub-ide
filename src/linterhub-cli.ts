@@ -43,7 +43,7 @@ export class LinterhubArgs {
         this.mode = mode;
         this.cliPath = this.prefix() + ' ';
     }
-    private prefix(): string {
+    public prefix(): string {
         switch (this.mode) {
             case LinterhubMode.dotnet:
                 return 'dotnet ' + path.join(this.cliRoot, 'cli.dll');
@@ -62,7 +62,7 @@ export class LinterhubArgs {
       * @returns {string} Command to CLI
       */
     analyze(): string {
-        return this.cliPath + `--mode=analyze --project=${this.project} --linter=jshint`;
+        return this.cliPath + `--mode=analyze --project=${this.project}`;
     }
 
     /**

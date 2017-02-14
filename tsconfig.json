@@ -2,7 +2,7 @@
     "version": "1.6.2",
     "compilerOptions": {
         "rootDir": "src",
-        "target": "es6",
+        "target": "es5",
         "module": "commonjs",
         "noImplicitAny": false,
         "removeComments": true,
@@ -10,9 +10,6 @@
         "declaration": true,
         "suppressImplicitAnyIndexErrors": true,
         "outDir": "js",
-        "typeRoots": [
-            "node_modules/@types"
-        ],
         "paths": {
             "src/": ["src/"]
         }
