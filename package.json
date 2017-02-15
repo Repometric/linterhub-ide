@@ -24,7 +24,9 @@
     "process": "^0.11.9",
     "url": "^0.11.0",
     "mkdirp": "^0.5.1",
-    "yauzl": "^2.7.0"
+    "yauzl": "^2.7.0",
+    "mocha": "^3.2.0",
+    "mock-require": "^2.0.1"
   },
   "devDependencies": {
     "@types/node": "^7.0.5"

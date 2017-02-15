@@ -152,7 +152,7 @@ export class LinterhubCli {
         this.cliRoot = cliRoot;
         this.log = log;
     }
-    private execute(command: string): Promise<{}> {
+    public execute(command: string): Promise<{}> {
         // TODO: Return ChildProcess in order to stop analysis when document is closed
         this.log.info('Execute command: ' + command);
         return executeChildProcess(command, this.cliRoot);

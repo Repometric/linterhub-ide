@@ -216,7 +216,7 @@ export class Integration {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Activating " + name + "..."))
             .then(() => this.linterhub.activate(name))
-            .catch((reason) => { this.logger.error(`Error activate '${reason}.toString()'.`) })
+            .catch((reason) => this.logger.error(`Error activate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
@@ -253,18 +253,20 @@ export class Integration {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true))
             .then(() => this.linterhub.deactivate(name))
-            .catch((reason) => { this.logger.error(`Error deactivate '${reason}.toString()'.`) })
+            .catch((reason) => this.logger.error(`Error deactivate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false))
             .then(() => name);
     }
 
+    /**
+     * Get linterhub and other versions.
+     *
+     */
     version(): Promise<string> {
         return this.onReady
             .then(() => {
                 return this.linterhub.version();
             })
-            .catch((reason) => {
-                this.logger.error(reason.toString());
-            });
+            .catch((reason) => this.logger.error(reason.toString()));
     }
 }
