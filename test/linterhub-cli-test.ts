@@ -1,5 +1,4 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
-/// <reference path="../typings/globals/assert/index.d.ts"/>
 
 import assert = require("assert");
 var sinon = require('sinon')

@@ -1,5 +1,4 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
-/// <reference path="../typings/globals/assert/index.d.ts"/>
 
 import assert = require("assert");
 var sinon = require('sinon');
@@ -184,7 +183,7 @@ describe('Integration', function () {
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "deactivate", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
-            });
+            }); 
         })
         let integration: Integration = new Integration(api, settings);
         it('doesn\'t call linterhub.deactivate', function () {

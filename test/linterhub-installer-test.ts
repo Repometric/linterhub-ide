@@ -1,8 +1,6 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
-/// <reference path="../typings/globals/assert/index.d.ts"/>
 
 import assert = require("assert");
-import mock = require("mock-require");
 var sinon = require('sinon');
 var util = require('../src/util');
 var execute = sinon.stub(util, "executeChildProcess", function (command: string, workingDirectory: string = null): Promise<string> {

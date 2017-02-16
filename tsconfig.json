@@ -1,20 +1,20 @@
 {
-    "version": "1.6.2",
     "compilerOptions": {
-        "rootDir": "src",
         "target": "es5",
         "module": "commonjs",
-        "noImplicitAny": false,
+        "moduleResolution": "node",
+        "lib": [ "es6" ],
         "removeComments": true,
         "preserveConstEnums": true,
         "declaration": true,
         "suppressImplicitAnyIndexErrors": true,
         "outDir": "js",
-        "paths": {
-            "src/": ["src/"]
-        }
+        "typeRoots": [
+            "./node_modules/@types"
+        ]
     },
     "exclude": [
-        "node_modues"
+        "node_modues",
+        "js"
     ]
 }

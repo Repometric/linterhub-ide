@@ -19,16 +19,15 @@
     "http-proxy-agent": "^1.0.0",
     "https": "^1.0.0",
     "https-proxy-agent": "^1.0.0",
+    "mkdirp": "^0.5.1",
+    "mocha": "^3.2.0",
+    "assert": "^1.4.1",
     "os": "^0.1.1",
     "path": "^0.12.7",
     "process": "^0.11.9",
     "url": "^0.11.0",
-    "mkdirp": "^0.5.1",
     "yauzl": "^2.7.0",
-    "mocha": "^3.2.0",
-    "mock-require": "^2.0.1"
-  },
-  "devDependencies": {
-    "@types/node": "^7.0.5"
+    "sinon": "^1.17.1",
+    "@types/node": "^6.0.45"
   }
 }
