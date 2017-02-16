@@ -4,28 +4,28 @@ import assert = require("assert");
 var sinon = require('sinon')
 import { LinterhubArgs, LinterhubMode, LinterhubCli, LinterhubCliLazy } from '../src/linterhub-cli';
 
-describe('LinterhubArgs', function () {
+describe('LinterhubArgs class', function () {
     let obj = new LinterhubArgs("cli-path", "project-path", LinterhubMode.dotnet);
-    it('generates wrong prefix', function () {
+    it('prefix method check', function () {
         assert.equal(obj.prefix(), "dotnet cli-path/cli.dll");
     });
-    it('generates wrong analyze request', function () {
+    it('analyze request generation', function () {
         assert.equal(obj.analyze(), "dotnet cli-path/cli.dll --mode=analyze --project=project-path");
     });
-    it('generates wrong activate request', function () {
+    it('activate request generation', function () {
         assert.equal(obj.activate("linter"), "dotnet cli-path/cli.dll --mode=activate --project=project-path --active=true --linter=linter");
     });
-    it('generates wrong linterVersion request', function () {
+    it('linterVersion request generation', function () {
         assert.equal(obj.linterVersion("linter", true), "dotnet cli-path/cli.dll --mode=LinterInstall --linter=linter");
         assert.equal(obj.linterVersion("linter", false), "dotnet cli-path/cli.dll --mode=LinterVersion --linter=linter");
     });
-    it('generates wrong deactivate request', function () {
+    it('deactivate request generation', function () {
         assert.equal(obj.deactivate("linter"), "dotnet cli-path/cli.dll --mode=activate --project=project-path --active=false --linter=linter");
     });
-    it('generates wrong catalog request', function () {
+    it('catalog request generation', function () {
         assert.equal(obj.catalog(), "dotnet cli-path/cli.dll --mode=catalog");
     });
-    it('generates wrong version request', function () {
+    it('version request generation', function () {
         assert.equal(obj.version(), "dotnet cli-path/cli.dll --mode=version");
     });
 
@@ -38,7 +38,7 @@ class LoggerMock {
 }
 
 
-describe('LinterhubCli', function () {
+describe('LinterhubCli class', function () {
     let cli_path: string = "cli-path";
     let project_path: string = "project-path";
     let cli = new LinterhubCli(new LoggerMock(), cli_path, project_path);
@@ -48,40 +48,40 @@ describe('LinterhubCli', function () {
         });
     });
     let args = new LinterhubArgs(cli_path, project_path);
-    it('executes wrong analyze request', function () {
+    it('analyze request execution', function () {
         return cli.analyze().then(function (x) {
             assert.equal(x, args.analyze());
         })
     });
-    it('executes wrong analyze file request', function () {
+    it('analyze file request execution', function () {
         let file: string = "file";
         return cli.analyzeFile(file).then(function (x) {
             assert.equal(x, args.analyzeFile(file));
         })
     });
-    it('executes wrong catalog request', function () {
+    it('catalog request execution', function () {
         return cli.catalog().then(function (x) {
             assert.equal(x, args.catalog());
         })
     });
-    it('executes wrong activate request', function () {
+    it('activate request execution', function () {
         let linter: string = "linter";
         return cli.activate(linter).then(function (x) {
             assert.equal(x, args.activate(linter));
         })
     });
-    it('executes wrong deactivate request', function () {
+    it('deactivate request execution', function () {
         let linter: string = "linter";
         return cli.deactivate(linter).then(function (x) {
             assert.equal(x, args.deactivate(linter));
         })
     });
-    it('executes wrong version request', function () {
+    it('version request execution', function () {
         return cli.version().then(function (x) {
             assert.equal(x, args.version());
         })
     });
-    it('executes wrong linter version request', function () {
+    it('linter version request execution', function () {
         let linter: string = "linter";
         return cli.linterVersion(linter, true).then(function (x) {
             assert.equal(x, args.linterVersion(linter, true));

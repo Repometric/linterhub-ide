@@ -22,21 +22,21 @@ export interface LoggerInterface {
       * @method info
       * @param {string} log Text to print
       */
-    info(log: string);
+    info(log: string): void;
 
     /**
       * Prints errors
       * @method error
       * @param {string} log Text to print
       */
-    error(log: string);
+    error(log: string): void;
 
     /**
       * Prints warnings
       * @method warn
       * @param {string} log Text to print
       */
-    warn(log: string);
+    warn(log: string): void;
 }
 
 /**
@@ -73,7 +73,7 @@ export class Integration {
 
     protected onReady: Promise<{}>;
 
-    protected settings: any;
+    protected settings: Settings;
     protected api: any;
 
     public initializeLinterhub() {

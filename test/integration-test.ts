@@ -8,21 +8,20 @@ sinon.stub(fs, "existsSync", function () {
     return true;
 })
 import { Integration } from '../src/integration';
-import { PlatformInformation } from '../src/platform';
 import { Run } from '../src/integration';
 import { LinterhubMode } from '../src/linterhub-cli';
-import { LinterVersionResult, LinterResult } from '../src/types';
+import { LinterVersionResult } from '../src/types';
 
 class LoggerMock {
-    info(string: string) { }
-    error(string: string) { }
-    warn(string: string) { }
+    info(string: string): void { }
+    error(string: string): void { }
+    warn(string: string): void { }
 }
 class StatusMock {
     update(params: any, progress?: boolean, text?: string): void { }
 }
 
-describe('Integration', function () {
+describe('Integration class', function () {
     let api = {
         logger: new LoggerMock(),
         status: new StatusMock(),
@@ -47,7 +46,7 @@ describe('Integration', function () {
             });
         })
         let integration: Integration = new Integration(api, settings);
-        it('doesn\'t call linterhub.version', function () {
+        it('should call linterhub.version', function () {
             return integration.version().then(function (x) {
                 assert(spy.called);
                 spy.restore();
@@ -66,18 +65,18 @@ describe('Integration', function () {
         })
         var integration = new Integration(api, settings);
 
-        it('doesn\'t call linterhub.analyze', function () {
+        it('should call linterhub.analyze', function () {
             return integration.analyze().then(function (x) {
                 assert(spy.called);
             });
         });
-        it('doesn\'t call api.sendDiagnostics', function () {
+        it('should call api.sendDiagnostics', function () {
             return integration.analyze().then(function (x) {
                assert(spy_diagnostics.called);
             });
         });
 
-        it('returns wrong result', function () {
+        it('result check', function () {
             return integration.analyze().then(function (x) {
                 assert.equal(JSON.stringify(x), JSON.stringify(data));
             });
@@ -98,26 +97,26 @@ describe('Integration', function () {
             return file;
         })
         var integration = new Integration(api, settings);
-        it('tested for wrong Run mode', function () {
+        it('return null on wrong Run mode', function () {
             assert.equal(integration.analyzeFile("path", Run.none), null);
         });
-        it('doesn\'t call linterhub.analyzeFile', function () {
+        it('should call linterhub.analyzeFile', function () {
             return integration.analyzeFile("path", Run.onOpen).then(function (x) {
                 assert(spy.called);
             });
         });
-        it('doesn\'t call api.normalizePath', function () {
+        it('should call api.normalizePath', function () {
             return integration.analyzeFile("path", Run.onOpen).then(function (x) {
                 assert(spy_normalize.called);
             });
         });
-        it('doesn\'t call api.sendDiagnostics', function () {
+        it('should call api.sendDiagnostics', function () {
             return integration.analyzeFile("path", Run.onOpen).then(function (x) {
                 assert(spy_diagnostics.called);
             });
         });
 
-        it('returns wrong result', function () {
+        it('result check', function () {
             return integration.analyzeFile("path", Run.onOpen).then(function (x) {
                 assert.equal(JSON.stringify(x), JSON.stringify(data));
             });
@@ -135,12 +134,12 @@ describe('Integration', function () {
             });
         })
         let integration: Integration = new Integration(api, settings);
-        it('doesn\'t call linterhub.linterVersion', function () {
+        it('should call linterhub.linterVersion', function () {
             return integration.linterVersion("csslint", false).then(function (x) {
                 assert(spy.called);
             });
         });
-        it('returns wrong result', function () {
+        it('result check', function () {
             return integration.linterVersion("csslint", false).then(function (x) {
                 let result: LinterVersionResult = {
                     LinterName: "csslint",
@@ -164,12 +163,12 @@ describe('Integration', function () {
             });
         })
         let integration: Integration = new Integration(api, settings);
-        it('doesn\'t call linterhub.catalog', function () {
+        it('should call linterhub.catalog', function () {
             return integration.catalog().then(function (x) {
                 assert(spy.called);
             });
         });
-        it('returns wrong result', function () {
+        it('result check', function () {
             return integration.catalog().then(function (x) {
                 assert.equal(JSON.stringify(x), data);
             });
@@ -186,13 +185,13 @@ describe('Integration', function () {
             }); 
         })
         let integration: Integration = new Integration(api, settings);
-        it('doesn\'t call linterhub.deactivate', function () {
+        it('should call linterhub.deactivate', function () {
             return integration.deactivate("linter").then(function (x) {
                 assert(spy.called);
                 spy.restore();
             });
         });
-        it('doesn\'t return valid linter name', function () {
+        it('must return valid linter name', function () {
             return integration.deactivate("linter").then(function (x) {
                 assert.equal(x, "linter");
             });
@@ -205,13 +204,13 @@ describe('Integration', function () {
             });
         })
         let integration: Integration = new Integration(api, settings);
-        it('doesn\'t call linterhub.activate', function () {
+        it('should call linterhub.activate', function () {
             return integration.activate("linter").then(function (x) {
                 assert(spy.called);
                 spy.restore();
             });
         });
-        it('doesn\'t return valid linter name', function () {
+        it('must return valid linter name', function () {
             return integration.activate("linter").then(function (x) {
                 assert.equal(x, "linter");
             });

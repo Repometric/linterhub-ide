@@ -8,7 +8,7 @@
             "command": "tsc",
             "isShellCommand": true,
             "args": ["-p", "."],
-            "showOutput": "silent",
+            "showOutput": "always",
             "problemMatcher": "$tsc",
             "isBuildCommand": true
         },
@@ -16,7 +16,7 @@
             "taskName": "test",
             "command": "mocha",
             "isTestCommand": true,
-            "args": ["js/test/*.js"],
+            "args": ["js/test/*.js", "-R", "spec", "-C"],
             "isShellCommand": true,
             "showOutput": "always"
         }
