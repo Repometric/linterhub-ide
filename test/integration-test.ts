@@ -7,15 +7,27 @@ var fs = require("fs");
 sinon.stub(fs, "existsSync", function () {
     return true;
 })
-import { Integration } from '../src/integration';
+import { Integration, LoggerInterface, StatusInterface } from '../src/integration';
 import { Run } from '../src/integration';
 import { LinterhubMode } from '../src/linterhub-cli';
 import { Types } from '../src/types';
 
+import { LinterhubInstallation } from '../src/linterhub-installer';
+
 class LoggerMock {
-    info(string: string): void { }
-    error(string: string): void { }
-    warn(string: string): void { }
+    private last: string;
+    getLast(): string {
+        return this.last;
+    }
+    info(string: string): void {
+        this.last = string;
+    }
+    error(string: string): void {
+        this.last = string;
+    }
+    warn(string: string): void {
+        this.last = string;
+    }
 }
 class StatusMock {
     update(params: any, progress?: boolean, text?: string): void { }
@@ -54,8 +66,8 @@ describe('Integration class', function () {
         });
     });
     var spy_diagnostics = sinon.stub(api, "sendDiagnostics", function (data: string): any {
-            return JSON.parse(data);
-        })
+        return JSON.parse(data);
+    })
     describe('analyze method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "analyze", function (): Promise<string> {
@@ -72,7 +84,7 @@ describe('Integration class', function () {
         });
         it('should call api.sendDiagnostics', function () {
             return integration.analyze().then(function (x) {
-               assert(spy_diagnostics.called);
+                assert(spy_diagnostics.called);
             });
         });
 
@@ -83,6 +95,58 @@ describe('Integration class', function () {
         });
         after(function (done) {
             spy.restore();
+            done();
+        })
+    });
+    describe('install method', function () {
+        var install_stub = sinon.stub(LinterhubInstallation, "install",
+            function (mode: LinterhubMode, folder: string, proxy: string, strictSSL: boolean, log: LoggerInterface, status: StatusInterface, version: string): Promise<string> {
+                return new Promise((resolve, reject) => {
+                    resolve("path_to_cli");
+                });
+            }
+        );
+        let gdv_success: boolean = true;
+        var getDotnetVersion_stub = sinon.stub(LinterhubInstallation, "getDotnetVersion",
+            function (): Promise<string> {
+                return new Promise((resolve, reject) => {
+                    if (gdv_success)
+                        resolve("string with dotnet version");
+                    else
+                        reject("error string");
+                });
+            }
+        );
+        var integration = new Integration(api, settings);
+
+        it('should call LinterhubInstallation.install', function () {
+            return integration.install().then(function (x) {
+                assert(install_stub.called);
+            });
+        });
+
+        it('should call LinterhubInstallation.getDotnetVersion', function () {
+            return integration.install().then(function (x) {
+                assert(getDotnetVersion_stub.called);
+            });
+        });
+
+        it('check case when cant find dotnet', function () {
+            gdv_success = false;
+            return integration.install().then(function (x) {
+                assert.equal(integration.getSettings().linterhub.mode, LinterhubMode.native);
+            });
+        });
+
+        it('result check', function () {
+            return integration.install().then(function (x) {
+                assert.equal(x, "path_to_cli");
+            });
+        });
+
+        after(function (done) {
+            install_stub.restore();
+            getDotnetVersion_stub.restore();
             done();
         })
     });
@@ -182,7 +246,7 @@ describe('Integration class', function () {
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "deactivate", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
-            }); 
+            });
         })
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.deactivate', function () {

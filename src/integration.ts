@@ -76,6 +76,13 @@ export class Integration {
     protected settings: Settings;
     protected api: any;
 
+    /**
+     * Returns current settings
+     */
+    public getSettings(): Settings {
+        return this.settings;
+    }
+
     public initializeLinterhub() {
         this.linterhub = new LinterhubCliLazy(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
         this.onReady = this.linterhub.version();
@@ -104,13 +111,12 @@ export class Integration {
             .then(() => { this.settings.linterhub.mode = LinterhubMode.dotnet; })
             .catch(() => { this.settings.linterhub.mode = LinterhubMode.native; })
             .then(() => { this.logger.info(`Start download.`); })
-            .then(() => { this.logger.info(this.settings.linterhub.mode.toString()) })
             .then(() => {
 
                 return LinterhubInstallation.install(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, null, true, this.logger, this.status, this.linterhub_version)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
-                        console.log(data);
+                        this.logger.info(data);
                         return data;
                     })
                     .catch((reason) => {

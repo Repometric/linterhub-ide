@@ -38,8 +38,8 @@ describe('LinterhubPackage class', function () {
     });
 });
 
-describe('Additional function', function () {
-    describe('GetDockerVersion', function () {
+describe('LinterhubInstallation namespace', function () {
+    describe('GetDockerVersion function', function () {
         it('command check', function () {
             return LinterhubInstallation.getDockerVersion().then(function (x) {
                 assert.equal(x, "docker version --format \'{{.Server.Version}}\'");
@@ -47,7 +47,7 @@ describe('Additional function', function () {
         });
     });
 
-    describe('GetDotnetVersion', function () {
+    describe('GetDotnetVersion function', function () {
         it('command check', function () {
             return LinterhubInstallation.getDotnetVersion().then(function (x) {
                 assert.equal(x, "dotnet --version");
@@ -55,7 +55,7 @@ describe('Additional function', function () {
         });
     });
 
-    describe('DownloadDock', function () {
+    describe('DownloadDock function', function () {
         it('command check', function () {
             return LinterhubInstallation.downloadDock("linter").then(function (x) {
                 assert.equal(x, "docker pull linter");
@@ -65,7 +65,7 @@ describe('Additional function', function () {
 })
 
 describe('NetworkHelper class', function () {
-    describe('buildRequestOptions', function () {
+    describe('buildRequestOptions function', function () {
         let bro = new NetworkHelper();
         let url = "https://example.com/file.html?param=value";
         let proxy = "https://proxyurl.com";
