@@ -23,7 +23,7 @@ describe('LinterhubArgs class', function () {
         assert.equal(obj.deactivate("linter"), "dotnet cli-path/cli.dll --mode=activate --project=project-path --active=false --linter=linter");
     });
     it('catalog request generation', function () {
-        assert.equal(obj.catalog(), "dotnet cli-path/cli.dll --mode=catalog");
+        assert.equal(obj.catalog(), "dotnet cli-path/cli.dll --mode=catalog --project=project-path");
     });
     it('version request generation', function () {
         assert.equal(obj.version(), "dotnet cli-path/cli.dll --mode=version");

@@ -118,7 +118,7 @@ export class LinterhubArgs {
       * @returns {string} Command to CLI
       */
     catalog(): string {
-        return this.cliPath + `--mode=catalog`;
+        return this.cliPath + `--mode=catalog --project=${this.project}`;
     }
 
     /**
