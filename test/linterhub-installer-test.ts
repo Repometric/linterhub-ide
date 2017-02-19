@@ -9,7 +9,7 @@ var execute = sinon.stub(util, "executeChildProcess", function (command: string,
     });
 })
 import { PlatformInformation } from '../src/platform';
-import * as installer from '../src/linterhub-installer';
+import { LinterhubInstallation, NetworkHelper, LinterhubPackage } from '../src/linterhub-installer';
 
 describe('LinterhubPackage class', function () {
     let version: string = "version";
@@ -17,7 +17,7 @@ describe('LinterhubPackage class', function () {
     let folder: string = "folder";
     let github_prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/"
 
-    let obj = new installer.LinterhubPackage(new PlatformInformation("linux", "x64"), "folder", true, version);
+    let obj = new LinterhubPackage(new PlatformInformation("linux", "x64"), "folder", true, version);
     it('version check', function () {
         assert.equal(obj.getPackageVersion(), version);
     });
@@ -41,7 +41,7 @@ describe('LinterhubPackage class', function () {
 describe('Additional function', function () {
     describe('GetDockerVersion', function () {
         it('command check', function () {
-            return installer.getDockerVersion().then(function (x) {
+            return LinterhubInstallation.getDockerVersion().then(function (x) {
                 assert.equal(x, "docker version --format \'{{.Server.Version}}\'");
             })
         });
@@ -49,7 +49,7 @@ describe('Additional function', function () {
 
     describe('GetDotnetVersion', function () {
         it('command check', function () {
-            return installer.getDotnetVersion().then(function (x) {
+            return LinterhubInstallation.getDotnetVersion().then(function (x) {
                 assert.equal(x, "dotnet --version");
             })
         });
@@ -57,7 +57,7 @@ describe('Additional function', function () {
 
     describe('DownloadDock', function () {
         it('command check', function () {
-            return installer.downloadDock("linter").then(function (x) {
+            return LinterhubInstallation.downloadDock("linter").then(function (x) {
                 assert.equal(x, "docker pull linter");
             })
         });
@@ -66,7 +66,7 @@ describe('Additional function', function () {
 
 describe('NetworkHelper class', function () {
     describe('buildRequestOptions', function () {
-        let bro = new installer.NetworkHelper();
+        let bro = new NetworkHelper();
         let url = "https://example.com/file.html?param=value";
         let proxy = "https://proxyurl.com";
         it('should return same host', function () {

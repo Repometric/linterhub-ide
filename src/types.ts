@@ -1,49 +1,52 @@
-export interface NoParams {
-}
+export namespace Types {
 
-export interface StatusParams {
-	id: string;
-	state: any;
-}
+	export interface NoParams {
+	}
 
-export interface ActivateParams {
-	activate: boolean;
-	linter: string;
-}
+	export interface StatusParams {
+		id: string;
+		state: any;
+	}
 
-export interface AnalyzeParams {
-	full: boolean;
-	path: string;
-}
+	export interface ActivateParams {
+		activate: boolean;
+		linter: string;
+	}
 
-export interface LinterVersionParams {
-	linter: string;
-}
+	export interface AnalyzeParams {
+		full: boolean;
+		path: string;
+	}
 
-export interface NoResult {
-}
+	export interface LinterVersionParams {
+		linter: string;
+	}
 
-export interface LinterResult {
-	name: string;
-	description: string;
-	languages: string;
-}
+	export interface NoResult {
+	}
 
-export interface LinterVersionResult {
-	LinterName: string;
-	Installed: boolean;
-	Version: string;
-}
+	export interface LinterResult {
+		name: string;
+		description: string;
+		languages: string;
+	}
 
-export interface CatalogResult {
-    linters: LinterResult[];
-}
+	export interface LinterVersionResult {
+		LinterName: string;
+		Installed: boolean;
+		Version: string;
+	}
 
-export interface InstallResult {
-	path: string;
-}
+	export interface CatalogResult {
+		linters: LinterResult[];
+	}
 
-export interface ConfigResult {
-	strictSSL: Boolean;
-	proxy: string;
+	export interface InstallResult {
+		path: string;
+	}
+
+	export interface ConfigResult {
+		strictSSL: Boolean;
+		proxy: string;
+	}
 }

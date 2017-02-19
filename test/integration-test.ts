@@ -10,7 +10,7 @@ sinon.stub(fs, "existsSync", function () {
 import { Integration } from '../src/integration';
 import { Run } from '../src/integration';
 import { LinterhubMode } from '../src/linterhub-cli';
-import { LinterVersionResult } from '../src/types';
+import { Types } from '../src/types';
 
 class LoggerMock {
     info(string: string): void { }
@@ -141,7 +141,7 @@ describe('Integration class', function () {
         });
         it('result check', function () {
             return integration.linterVersion("csslint", false).then(function (x) {
-                let result: LinterVersionResult = {
+                let result: Types.LinterVersionResult = {
                     LinterName: "csslint",
                     Installed: true,
                     Version: "v1.0.4"

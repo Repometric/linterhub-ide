@@ -1,6 +1,6 @@
 import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli'
-import { getDotnetVersion, install } from './linterhub-installer'
-import { LinterVersionResult, LinterResult } from './types';
+import { LinterhubInstallation } from './linterhub-installer'
+import { Types } from './types';
 import * as fs from 'fs';
 
 export enum Run {
@@ -100,14 +100,14 @@ export class Integration {
     install(): Promise<string> {
         this.status.update({ id: this.systemId }, true, "Start install process..");
 
-        return getDotnetVersion()
+        return LinterhubInstallation.getDotnetVersion()
             .then(() => { this.settings.linterhub.mode = LinterhubMode.dotnet; })
             .catch(() => { this.settings.linterhub.mode = LinterhubMode.native; })
             .then(() => { this.logger.info(`Start download.`); })
             .then(() => { this.logger.info(this.settings.linterhub.mode.toString()) })
             .then(() => {
 
-                return install(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, null, true, this.logger, this.status, this.linterhub_version)
+                return LinterhubInstallation.install(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, null, true, this.logger, this.status, this.linterhub_version)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
                         console.log(data);
@@ -189,7 +189,7 @@ export class Integration {
      * Get linters catalog.
      *
      */
-    catalog(): Promise<LinterResult[]> {
+    catalog(): Promise<Types.LinterResult[]> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Getting linters catalog.."))
             .then(() => this.linterhub.catalog())
@@ -225,12 +225,12 @@ export class Integration {
      *
      * @param path The linter name.
      */
-    linterVersion(name: string, install: boolean): Promise<LinterVersionResult> {
+    linterVersion(name: string, install: boolean): Promise<Types.LinterVersionResult> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true))
             .then(() => this.linterhub.linterVersion(name, install))
             .then((data: string) => {
-                let json: LinterVersionResult = JSON.parse(data);
+                let json: Types.LinterVersionResult = JSON.parse(data);
                 this.logger.info(data);
                 return json;
             })

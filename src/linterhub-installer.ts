@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as https from 'https';
 import * as path from 'path';
 import { parse as parseUrl } from 'url';
-import { getProxyAgent } from './proxy';
+import { Proxy } from './proxy';
 import { PlatformInformation } from './platform';
 import { executeChildProcess } from './util'
 import { LinterhubMode } from './linterhub-cli'
@@ -69,7 +69,7 @@ export class NetworkHelper {
         const options: https.RequestOptions = {
             host: url.host,
             path: url.path,
-            agent: getProxyAgent(url, proxy, strictSSL),
+            agent: Proxy.getProxyAgent(url, proxy, strictSSL),
             rejectUnauthorized: strictSSL
         };
         return options;
@@ -78,7 +78,7 @@ export class NetworkHelper {
     downloadContent(urlString: any, proxy: string, strictSSL: boolean): Promise<string> {
         const options = this.buildRequestOptions(urlString, proxy, strictSSL);
         return new Promise<string>((resolve, reject) => {
-            https.get(options, function(response) {
+            https.get(options, function (response) {
                 var body = '';
                 response.on('data', (chunk) => body + chunk);
                 response.on('end', () => resolve(body));
@@ -133,124 +133,127 @@ export class NetworkHelper {
     }
 }
 
-/**
-  * Function that installs Linterhub
-  * @function install
-  * @param {LinterhubMode} mode Describes how to run Cli
-  * @param {string} folder Folder to install Linterhub
-  * @param {string} proxy
-  * @param {boolean} strictSSL
-  * @param {LoggerInterface} log Object that will be used for logging
-  * @param {StatusInterface} status Object that will be used for changing status
-  * @param {string} version What version of Linterhub Cli to install
-  * @returns {Promise<string>} Path to Cli
-  */
-export function install(mode: LinterhubMode, folder: string, proxy: string, strictSSL: boolean, log: LoggerInterface, status: StatusInterface, version: string) : Promise<string> {
-    // TODO
-    if (mode == LinterhubMode.docker) {
-        return downloadDock("repometric/linterhub-cli");
-    } else {
-        return PlatformInformation.GetCurrent().then(info => {
-            log.info("Platform: " + info.toString());
-            let helper = new LinterhubPackage(info, folder, mode == LinterhubMode.native, version);
-            let name = helper.getPackageFullName();
-            log.info("Name: " + name);
-            let networkHelper = new NetworkHelper();
-            return networkHelper.downloadFile(helper.getPackageUrl(), helper.getPackageFullFileName(), proxy, strictSSL, status).then(() => {
-                log.info("File downloaded");
-                return installFile(helper.getPackageFullFileName(), folder, log).then(() => {
-                    return path.resolve(folder, 'bin', helper.getPackageName());
+export namespace LinterhubInstallation {
+
+    /**
+      * Function that installs Linterhub
+      * @function install
+      * @param {LinterhubMode} mode Describes how to run Cli
+      * @param {string} folder Folder to install Linterhub
+      * @param {string} proxy
+      * @param {boolean} strictSSL
+      * @param {LoggerInterface} log Object that will be used for logging
+      * @param {StatusInterface} status Object that will be used for changing status
+      * @param {string} version What version of Linterhub Cli to install
+      * @returns {Promise<string>} Path to Cli
+      */
+    export function install(mode: LinterhubMode, folder: string, proxy: string, strictSSL: boolean, log: LoggerInterface, status: StatusInterface, version: string): Promise<string> {
+        // TODO
+        if (mode == LinterhubMode.docker) {
+            return downloadDock("repometric/linterhub-cli");
+        } else {
+            return PlatformInformation.GetCurrent().then(info => {
+                log.info("Platform: " + info.toString());
+                let helper = new LinterhubPackage(info, folder, mode == LinterhubMode.native, version);
+                let name = helper.getPackageFullName();
+                log.info("Name: " + name);
+                let networkHelper = new NetworkHelper();
+                return networkHelper.downloadFile(helper.getPackageUrl(), helper.getPackageFullFileName(), proxy, strictSSL, status).then(() => {
+                    log.info("File downloaded");
+                    return installFile(helper.getPackageFullFileName(), folder, log).then(() => {
+                        return path.resolve(folder, 'bin', helper.getPackageName());
+                    });
                 });
             });
-        });
+        }
     }
-}
 
-function installFile(zipFile: string, folder: any, log: any) {
-    return new Promise<string>((resolve, reject) => {
+    function installFile(zipFile: string, folder: any, log: any) {
+        return new Promise<string>((resolve, reject) => {
 
-        yauzl.open(zipFile, { autoClose: true, lazyEntries: true }, (err, zipFile) => {
-            if (err) {
-                return reject(new Error('Immediate zip file error'));
-            }
-
-            zipFile.readEntry();
-            zipFile.on('entry', (entry: yauzl.Entry) => {
-                let absoluteEntryPath = path.resolve(/*getBaseInstallPath(pkg)*/
-                folder, entry.fileName);
-
-                if (entry.fileName.endsWith('/')) {
-                    // Directory - create it
-                    mkdirp(absoluteEntryPath, { mode: 0o775 }, err => {
-                        if (err) {
-                            return reject(new Error('Error creating directory for zip directory entry:' + err.code || ''));
-                        }
-
-                        zipFile.readEntry();
-                    });
+            yauzl.open(zipFile, { autoClose: true, lazyEntries: true }, (err, zipFile) => {
+                if (err) {
+                    return reject(new Error('Immediate zip file error'));
                 }
-                else {
-                    // File - extract it
-                    zipFile.openReadStream(entry, (err, readStream) => {
-                        if (err) {
-                            return reject(new Error('Error reading zip stream'));
-                        }
 
-                        mkdirp(path.dirname(absoluteEntryPath), { mode: 0o775 }, err => {
+                zipFile.readEntry();
+                zipFile.on('entry', (entry: yauzl.Entry) => {
+                    let absoluteEntryPath = path.resolve(/*getBaseInstallPath(pkg)*/
+                        folder, entry.fileName);
+
+                    if (entry.fileName.endsWith('/')) {
+                        // Directory - create it
+                        mkdirp(absoluteEntryPath, { mode: 0o775 }, err => {
                             if (err) {
-                                return reject(new Error('Error creating directory for zip file entry'));
+                                return reject(new Error('Error creating directory for zip directory entry:' + err.code || ''));
                             }
 
-                            // Make sure executable files have correct permissions when extracted
-                            let fileMode = true //pkg.binaries && pkg.binaries.indexOf(absoluteEntryPath) !== -1
-                                ? 0o755
-                                : 0o664;
-
-                            readStream.pipe(fs.createWriteStream(absoluteEntryPath, { mode: fileMode }));
-                            readStream.on('end', () => zipFile.readEntry());
+                            zipFile.readEntry();
                         });
-                    });
-                }
-            });
+                    }
+                    else {
+                        // File - extract it
+                        zipFile.openReadStream(entry, (err, readStream) => {
+                            if (err) {
+                                return reject(new Error('Error reading zip stream'));
+                            }
 
-            zipFile.on('end', () => resolve(folder));
-            zipFile.on('error', (err: any) => {
-                log.error(err.toString());
-                reject(new Error('Zip File Error:' + err.code || ''));
-            });
+                            mkdirp(path.dirname(absoluteEntryPath), { mode: 0o775 }, err => {
+                                if (err) {
+                                    return reject(new Error('Error creating directory for zip file entry'));
+                                }
+
+                                // Make sure executable files have correct permissions when extracted
+                                let fileMode = true //pkg.binaries && pkg.binaries.indexOf(absoluteEntryPath) !== -1
+                                    ? 0o755
+                                    : 0o664;
+
+                                readStream.pipe(fs.createWriteStream(absoluteEntryPath, { mode: fileMode }));
+                                readStream.on('end', () => zipFile.readEntry());
+                            });
+                        });
+                    }
+                });
+
+                zipFile.on('end', () => resolve(folder));
+                zipFile.on('error', (err: any) => {
+                    log.error(err.toString());
+                    reject(new Error('Zip File Error:' + err.code || ''));
+                });
+            })
         })
-    })
 
-}
+    }
 
-/**
-  * This function returns Docker version
-  * @function getDockerVersion
-  * @returns {Promise<string>} Stdout of command
-  */
-export function getDockerVersion() {
-    return executeChildProcess("docker version --format '{{.Server.Version}}'").then(removeNewLine);
-}
+    /**
+      * This function returns Docker version
+      * @function getDockerVersion
+      * @returns {Promise<string>} Stdout of command
+      */
+    export function getDockerVersion() {
+        return executeChildProcess("docker version --format '{{.Server.Version}}'").then(removeNewLine);
+    }
 
-/**
-  * This function returns Dotnet version
-  * @function getDotnetVersion
-  * @returns {Promise<string>} Stdout of command
-  */
-export function getDotnetVersion() {
-    return executeChildProcess('dotnet --version').then(removeNewLine);
-}
+    /**
+      * This function returns Dotnet version
+      * @function getDotnetVersion
+      * @returns {Promise<string>} Stdout of command
+      */
+    export function getDotnetVersion() {
+        return executeChildProcess('dotnet --version').then(removeNewLine);
+    }
 
-function removeNewLine(out: string): string {
-    return out.replace('\n', '').replace('\r', '');
-}
+    function removeNewLine(out: string): string {
+        return out.replace('\n', '').replace('\r', '');
+    }
 
-/**
-  * Function downloads Docker Image
-  * @function downloadDock
-  * @param {string} name Name of image to download
-  * @returns {Promise<string>} Stdout of command
-  */
-export function downloadDock(name: string): Promise<string> {
-    return executeChildProcess("docker pull " + name);
+    /**
+      * Function downloads Docker Image
+      * @function downloadDock
+      * @param {string} name Name of image to download
+      * @returns {Promise<string>} Stdout of command
+      */
+    export function downloadDock(name: string): Promise<string> {
+        return executeChildProcess("docker pull " + name);
+    }
 }
