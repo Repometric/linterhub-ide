@@ -1,8 +1,8 @@
 'use strict';
 
 import { Url, parse as parseUrl } from 'url';
-import * as HttpProxyAgent from 'http-proxy-agent';
-import * as HttpsProxyAgent from 'https-proxy-agent';
+import HttpProxyAgent = require('http-proxy-agent');
+import HttpsProxyAgent = require('https-proxy-agent');
 
 export namespace Proxy {
 
