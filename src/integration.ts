@@ -2,7 +2,7 @@ import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli'
 import { LinterhubInstallation } from './linterhub-installer'
 import { Types } from './types';
 import * as fs from 'fs';
-
+ 
 export enum Run {
     none,
     force,
@@ -59,7 +59,7 @@ export interface Settings {
         mode: LinterhubMode;
         cliPath: string;
         cliRoot: string;
-    }
+    };
     [key: string]: any;
 }
 
@@ -226,6 +226,18 @@ export class Integration {
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
+
+    /**
+     * Ignore warning.
+     *
+     * @param {IgnoreWarningParams} params Describes warning.
+     */
+    ignoreWarning(params: Types.IgnoreWarningParams): Promise<string> {
+        return this.onReady
+            .then(() => this.linterhub.ignoreWarning(params))
+            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`))
+    }
+
     /**
      * Get the linter version.
      *

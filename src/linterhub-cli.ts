@@ -1,6 +1,7 @@
-import { Cacheable, executeChildProcess } from './util'
-import { LoggerInterface } from './integration'
+import { Cacheable, executeChildProcess } from './util';
+import { LoggerInterface } from './integration';
 import * as path from 'path';
+import { Types } from './types';
 
 /**
   * List of mode how to execute Linterhub Cli
@@ -122,6 +123,26 @@ export class LinterhubArgs {
     }
 
     /**
+      * Add ignore rule
+      * @method ignoreWarning
+      * @param {IgnoreWarningParams} params Describes warning.
+      * @returns {string} Command to CLI
+      */
+    ignoreWarning(params: Types.IgnoreWarningParams): string {
+        let command: string = this.cliPath + `--mode=ignore --project=${this.project}`;
+        if (params.error !== null) {
+            command += " --error=" + params.error;
+        }
+        if (params.file !== null) {
+            command += " --file=" + params.file;
+        }
+        if (params.line !== null) {
+            command += " --line=" + params.line;
+        }
+        return command;
+    }
+
+    /**
       * Receive version of CLI, Linterhub etc
       * @method analyze
       * @returns {string} Command to CLI
@@ -168,6 +189,9 @@ export class LinterhubCli {
     }
     activate(linter: string): Promise<{}> {
         return this.execute(this.args.activate(linter));
+    }
+    ignoreWarning(params: Types.IgnoreWarningParams): Promise<{}> {
+        return this.execute(this.args.ignoreWarning(params));
     }
     linterVersion(linter: string, install: boolean): Promise<{}> {
         return this.execute(this.args.linterVersion(linter, install));
