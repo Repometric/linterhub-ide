@@ -43,7 +43,7 @@ export class LinterhubArgs {
         this.mode = mode;
         this.cliPath = this.prefix() + ' ';
     }
-    private prefix(): string {
+    public prefix(): string {
         switch (this.mode) {
             case LinterhubMode.dotnet:
                 return 'dotnet ' + path.join(this.cliRoot, 'cli.dll');
@@ -62,7 +62,7 @@ export class LinterhubArgs {
       * @returns {string} Command to CLI
       */
     analyze(): string {
-        return this.cliPath + `--mode=analyze --project=${this.project} --linter=jshint`;
+        return this.cliPath + `--mode=analyze --project=${this.project}`;
     }
 
     /**
@@ -118,7 +118,7 @@ export class LinterhubArgs {
       * @returns {string} Command to CLI
       */
     catalog(): string {
-        return this.cliPath + `--mode=catalog`;
+        return this.cliPath + `--mode=catalog --project=${this.project}`;
     }
 
     /**
@@ -152,7 +152,7 @@ export class LinterhubCli {
         this.cliRoot = cliRoot;
         this.log = log;
     }
-    private execute(command: string): Promise<{}> {
+    public execute(command: string): Promise<{}> {
         // TODO: Return ChildProcess in order to stop analysis when document is closed
         this.log.info('Execute command: ' + command);
         return executeChildProcess(command, this.cliRoot);

@@ -49,7 +49,7 @@ export class LinuxDistribution {
     public static FromReleaseInfo(releaseInfo: string, eol: string = os.EOL): LinuxDistribution {
         let name = unknown;
         let version = unknown;
-        let idLike : string[] = null;
+        let idLike: string[] = null;
 
         const lines = releaseInfo.split(eol);
         for (let line of lines) {
@@ -91,8 +91,7 @@ export class PlatformInformation {
     public constructor(
         public platform: string,
         public architecture: string,
-        public distribution: LinuxDistribution = null)
-    {
+        public distribution: LinuxDistribution = null) {
         try {
             this.runtimeId = PlatformInformation.getRuntimeId(platform, architecture, distribution);
         }
