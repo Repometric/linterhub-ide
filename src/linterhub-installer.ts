@@ -46,7 +46,7 @@ export class LinterhubPackage {
         return "unknown";
     }
     getPackageFullName(): string {
-        return "linterhub-cli-" + this.getPackageName() + "-" + this.version;
+        return "linterhub-cli-" + this.getPackageName();
     }
     getPackageFileName(): string {
         return this.getPackageFullName() + ".zip";
