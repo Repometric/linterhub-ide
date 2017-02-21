@@ -25,16 +25,16 @@ describe('LinterhubPackage class', function () {
         assert.equal(obj.getPackageName(), packageName);
     });
     it('package full name check', function () {
-        assert.equal(obj.getPackageFullName(), "linterhub-cli-" + packageName + "-" + version);
+        assert.equal(obj.getPackageFullName(), "linterhub-cli-" + packageName);
     });
     it('package file name check', function () {
-        assert.equal(obj.getPackageFileName(), "linterhub-cli-" + packageName + "-" + version + ".zip");
+        assert.equal(obj.getPackageFileName(), "linterhub-cli-" + packageName + ".zip");
     });
     it('package full file name check', function () {
-        assert.equal(obj.getPackageFullFileName(), folder + "/linterhub-cli-" + packageName + "-" + version + ".zip");
+        assert.equal(obj.getPackageFullFileName(), folder + "/linterhub-cli-" + packageName + ".zip");
     });
     it('package url check', function () {
-        assert.equal(obj.getPackageUrl(), github_prefix + version + "/linterhub-cli-" + packageName + "-" + version + ".zip");
+        assert.equal(obj.getPackageUrl(), github_prefix + version + "/linterhub-cli-" + packageName + ".zip");
     });
 });
 
@@ -78,7 +78,7 @@ describe('NetworkHelper class', function () {
     });
 })
 
-after(function(done){
+after(function (done) {
     execute.restore();
     done();
 })

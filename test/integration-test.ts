@@ -218,6 +218,23 @@ describe('Integration class', function () {
             done();
         })
     });
+    describe('ignoreWarning method', function () {
+        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "ignoreWarning", function (params: Types.IgnoreWarningParams): Promise<string> {
+            return new Promise((resolve, reject) => {
+                resolve();
+            });
+        })
+        let integration: Integration = new Integration(api, settings);
+        it('should call linterhub.ignoreWarning', function () {
+            return integration.ignoreWarning({ file: "filename", error: "errorid", line: 10}).then(function (x) {
+                assert(spy.called);
+            });
+        });
+        after(function (done) {
+            spy.restore();
+            done();
+        })
+    });
     describe('catalog method', function () {
         var data: string = "[{\"name\":\"linter1\",\"description\":\"description1\",\"languages\":\"coffeescript\",\"active\":false}," +
             "{\"name\":\"linter2\",\"description\":\"description2\",\"languages\":\"css\",\"active\":true}]";

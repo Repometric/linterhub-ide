@@ -2,7 +2,7 @@
 
 import assert = require("assert");
 var sinon = require('sinon')
-import { LinterhubArgs, LinterhubMode, LinterhubCli, LinterhubCliLazy } from '../src/linterhub-cli';
+import { LinterhubArgs, LinterhubMode, LinterhubCli } from '../src/linterhub-cli';
 
 describe('LinterhubArgs class', function () {
     let obj = new LinterhubArgs("cli-path", "project-path", LinterhubMode.dotnet);
@@ -27,6 +27,12 @@ describe('LinterhubArgs class', function () {
     });
     it('version request generation', function () {
         assert.equal(obj.version(), "dotnet cli-path/cli.dll --mode=version");
+    });
+    it('ignoreWarning request generation', function () {
+        assert.equal(obj.ignoreWarning({ file: null, error: null, line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path");
+        assert.equal(obj.ignoreWarning({ file: "file", error: null, line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --file=file");
+        assert.equal(obj.ignoreWarning({ file: "file", error: "test", line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --error=test --file=file");
+        assert.equal(obj.ignoreWarning({ file: "file", error: null, line: 10 }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --file=file --line=10");
     });
 
 });
