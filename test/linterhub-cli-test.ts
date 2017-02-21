@@ -1,7 +1,7 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
 
 import assert = require("assert");
-var sinon = require('sinon')
+var sinon = require('sinon');
 import { LinterhubArgs, LinterhubMode, LinterhubCli } from '../src/linterhub-cli';
 
 describe('LinterhubArgs class', function () {
@@ -57,44 +57,44 @@ describe('LinterhubCli class', function () {
     it('analyze request execution', function () {
         return cli.analyze().then(function (x) {
             assert.equal(x, args.analyze());
-        })
+        });
     });
     it('analyze file request execution', function () {
         let file: string = "file";
         return cli.analyzeFile(file).then(function (x) {
             assert.equal(x, args.analyzeFile(file));
-        })
+        });
     });
     it('catalog request execution', function () {
         return cli.catalog().then(function (x) {
             assert.equal(x, args.catalog());
-        })
+        });
     });
     it('activate request execution', function () {
         let linter: string = "linter";
         return cli.activate(linter).then(function (x) {
             assert.equal(x, args.activate(linter));
-        })
+        });
     });
     it('deactivate request execution', function () {
         let linter: string = "linter";
         return cli.deactivate(linter).then(function (x) {
             assert.equal(x, args.deactivate(linter));
-        })
+        });
     });
     it('version request execution', function () {
         return cli.version().then(function (x) {
             assert.equal(x, args.version());
-        })
+        });
     });
     it('linter version request execution', function () {
         let linter: string = "linter";
         return cli.linterVersion(linter, true).then(function (x) {
             assert.equal(x, args.linterVersion(linter, true));
-        })
+        });
     });
     after(function(done){
         execute.restore();
-        done()
+        done();
     });
 });

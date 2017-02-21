@@ -39,7 +39,7 @@ export class Cacheable {
     getValue(): Promise<{}> {
         let that = this;
         let promise = new Promise((resolve, reject) => {
-            if (that.value == null) {
+            if (that.value === null) {
                 that.action().then(value => {
                     that.value = value;
                     resolve(that.value);

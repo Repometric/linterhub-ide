@@ -6,7 +6,7 @@ import * as cli from '../src/linterhub-cli';
 var fs = require("fs");
 sinon.stub(fs, "existsSync", function () {
     return true;
-})
+});
 import { Integration, LoggerInterface, StatusInterface } from '../src/integration';
 import { Run } from '../src/integration';
 import { LinterhubMode } from '../src/linterhub-cli';
@@ -56,7 +56,7 @@ describe('Integration class', function () {
             return new Promise((resolve, reject) => {
                 resolve();
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.version', function () {
             return integration.version().then(function (x) {
@@ -67,14 +67,14 @@ describe('Integration class', function () {
     });
     var spy_diagnostics = sinon.stub(api, "sendDiagnostics", function (data: string): any {
         return JSON.parse(data);
-    })
+    });
     describe('analyze method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "analyze", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve(JSON.stringify(data));
             });
-        })
+        });
         var integration = new Integration(api, settings);
 
         it('should call linterhub.analyze', function () {
@@ -96,7 +96,7 @@ describe('Integration class', function () {
         after(function (done) {
             spy.restore();
             done();
-        })
+        });
     });
     describe('install method', function () {
         var install_stub = sinon.stub(LinterhubInstallation, "install",
@@ -110,10 +110,12 @@ describe('Integration class', function () {
         var getDotnetVersion_stub = sinon.stub(LinterhubInstallation, "getDotnetVersion",
             function (): Promise<string> {
                 return new Promise((resolve, reject) => {
-                    if (gdv_success)
+                    if (gdv_success) {
                         resolve("string with dotnet version");
-                    else
+                    }
+                    else {
                         reject("error string");
+                    }
                 });
             }
         );
@@ -148,7 +150,7 @@ describe('Integration class', function () {
             install_stub.restore();
             getDotnetVersion_stub.restore();
             done();
-        })
+        });
     });
     describe('analyzeFile method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
@@ -156,10 +158,10 @@ describe('Integration class', function () {
             return new Promise((resolve, reject) => {
                 resolve(JSON.stringify(data));
             });
-        })
+        });
         var spy_normalize = sinon.stub(api, "normalizePath", function (file: string): string {
             return file;
-        })
+        });
         var integration = new Integration(api, settings);
         it('return null on wrong Run mode', function () {
             assert.equal(integration.analyzeFile("path", Run.none), null);
@@ -189,14 +191,14 @@ describe('Integration class', function () {
             spy.restore();
             spy_normalize.restore();
             done();
-        })
+        });
     });
     describe('linterVersion method', function () {
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "linterVersion", function (name: string, install: boolean): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve("{\"LinterName\":\"" + name + "\",\"Installed\":true,\"Version\":\"v1.0.4\"}");
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.linterVersion', function () {
             return integration.linterVersion("csslint", false).then(function (x) {
@@ -216,24 +218,24 @@ describe('Integration class', function () {
         after(function (done) {
             spy.restore();
             done();
-        })
+        });
     });
     describe('ignoreWarning method', function () {
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "ignoreWarning", function (params: Types.IgnoreWarningParams): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.ignoreWarning', function () {
-            return integration.ignoreWarning({ file: "filename", error: "errorid", line: 10}).then(function (x) {
+            return integration.ignoreWarning({ file: "filename", error: "errorid", line: 10 }).then(function (x) {
                 assert(spy.called);
             });
         });
         after(function (done) {
             spy.restore();
             done();
-        })
+        });
     });
     describe('catalog method', function () {
         var data: string = "[{\"name\":\"linter1\",\"description\":\"description1\",\"languages\":\"coffeescript\",\"active\":false}," +
@@ -242,7 +244,7 @@ describe('Integration class', function () {
             return new Promise((resolve, reject) => {
                 resolve(data);
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.catalog', function () {
             return integration.catalog().then(function (x) {
@@ -257,14 +259,14 @@ describe('Integration class', function () {
         after(function (done) {
             spy.restore();
             done();
-        })
+        });
     });
     describe('deactivate method', function () {
         var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "deactivate", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.deactivate', function () {
             return integration.deactivate("linter").then(function (x) {
@@ -283,7 +285,7 @@ describe('Integration class', function () {
             return new Promise((resolve, reject) => {
                 resolve();
             });
-        })
+        });
         let integration: Integration = new Integration(api, settings);
         it('should call linterhub.activate', function () {
             return integration.activate("linter").then(function (x) {
