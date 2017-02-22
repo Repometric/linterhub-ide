@@ -276,7 +276,11 @@ export class Integration {
     ignoreWarning(params: Types.IgnoreWarningParams): Promise<string> {
         return this.onReady
             .then(() => this.linterhub.ignoreWarning(params))
-            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`));
+            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`))
+            .then((result) => {
+                this.logger.info(`Rule added!`);
+                return result;
+            });
     }
 
     /**
