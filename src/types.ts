@@ -18,6 +18,12 @@ export namespace Types {
 		path: string;
 	}
 
+	export interface IgnoreWarningParams {
+		file: string;
+		line: number;
+		error: string;
+	}
+
 	export interface LinterVersionParams {
 		linter: string;
 	}

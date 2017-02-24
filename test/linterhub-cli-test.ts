@@ -1,8 +1,8 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
 
 import assert = require("assert");
-var sinon = require('sinon')
-import { LinterhubArgs, LinterhubMode, LinterhubCli, LinterhubCliLazy } from '../src/linterhub-cli';
+var sinon = require('sinon');
+import { LinterhubArgs, LinterhubMode, LinterhubCli } from '../src/linterhub-cli';
 
 describe('LinterhubArgs class', function () {
     let obj = new LinterhubArgs("cli-path", "project-path", LinterhubMode.dotnet);
@@ -28,6 +28,12 @@ describe('LinterhubArgs class', function () {
     it('version request generation', function () {
         assert.equal(obj.version(), "dotnet cli-path/cli.dll --mode=version");
     });
+    it('ignoreWarning request generation', function () {
+        assert.equal(obj.ignoreWarning({ file: null, error: null, line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path");
+        assert.equal(obj.ignoreWarning({ file: "file", error: null, line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --file=file");
+        assert.equal(obj.ignoreWarning({ file: "file", error: "test", line: null }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --error=test --file=file");
+        assert.equal(obj.ignoreWarning({ file: "file", error: null, line: 10 }), "dotnet cli-path/cli.dll --mode=ignore --project=project-path --file=file --line=10");
+    });
 
 });
 
@@ -51,44 +57,44 @@ describe('LinterhubCli class', function () {
     it('analyze request execution', function () {
         return cli.analyze().then(function (x) {
             assert.equal(x, args.analyze());
-        })
+        });
     });
     it('analyze file request execution', function () {
         let file: string = "file";
         return cli.analyzeFile(file).then(function (x) {
             assert.equal(x, args.analyzeFile(file));
-        })
+        });
     });
     it('catalog request execution', function () {
         return cli.catalog().then(function (x) {
             assert.equal(x, args.catalog());
-        })
+        });
     });
     it('activate request execution', function () {
         let linter: string = "linter";
         return cli.activate(linter).then(function (x) {
             assert.equal(x, args.activate(linter));
-        })
+        });
     });
     it('deactivate request execution', function () {
         let linter: string = "linter";
         return cli.deactivate(linter).then(function (x) {
             assert.equal(x, args.deactivate(linter));
-        })
+        });
     });
     it('version request execution', function () {
         return cli.version().then(function (x) {
             assert.equal(x, args.version());
-        })
+        });
     });
     it('linter version request execution', function () {
         let linter: string = "linter";
         return cli.linterVersion(linter, true).then(function (x) {
             assert.equal(x, args.linterVersion(linter, true));
-        })
+        });
     });
     after(function(done){
         execute.restore();
-        done()
+        done();
     });
 });

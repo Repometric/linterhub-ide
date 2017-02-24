@@ -1,5 +1,5 @@
-import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli'
-import { LinterhubInstallation } from './linterhub-installer'
+import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli';
+import { LinterhubInstallation } from './linterhub-installer';
 import { Types } from './types';
 import * as fs from 'fs';
 
@@ -10,6 +10,45 @@ export enum Run {
     onOpen,
     onType,
     onSave
+}
+
+export interface AnalyzeResultInterface
+{
+    Name: string;
+    Model: {
+        Files: AnalyzeFileInterface[];
+        ParseErrors: {
+            ErrorMessage: string;
+            Input: any;
+        };
+    };
+}
+
+export interface AnalyzeFileInterface
+{
+    Path: string;
+    Errors: AnalyzeErrorInterface[];
+}
+
+export interface AnalyzeErrorInterface
+{
+    Message: string;
+    Severity: number;
+    Line: number;
+    Evidence: string;
+    Rule: {
+        Name: string;
+        Id: string;
+        Namespace: string;
+    };
+    Column: AnalyzeIntervalInterface;
+    Row: AnalyzeIntervalInterface;
+}
+
+export interface AnalyzeIntervalInterface
+{
+    Start: number;
+    End: number;
 }
 
 /**
@@ -59,7 +98,7 @@ export interface Settings {
         mode: LinterhubMode;
         cliPath: string;
         cliRoot: string;
-    }
+    };
     [key: string]: any;
 }
 
@@ -96,12 +135,14 @@ export class Integration {
         this.linterhub_version = api.linterhub_version;
         this.api = api;
         this.settings = settings;
-        if (this.settings.linterhub.cliPath == undefined || this.settings.linterhub.mode == undefined || !fs.existsSync(this.settings.linterhub.cliPath))
+        if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
             this.install()
                 .then(() => this.initializeLinterhub())
-                .then(() => this.api.saveConfig(this.settings))
-        else
+                .then(() => this.api.saveConfig(this.settings));
+        }
+        else {
             this.onReady = this.initializeLinterhub();
+        }
     }
 
     install(): Promise<string> {
@@ -149,16 +190,16 @@ export class Integration {
      */
     analyze(): Promise<any> {
         return this.onReady
-            .then(() => { this.logger.info(`Analyze project.`) })
-            .then(() => { this.status.update({ id: this.project }, true, "Analyzing project...") })
+            .then(() => { this.logger.info(`Analyze project.`); })
+            .then(() => { this.status.update({ id: this.project }, true, "Analyzing project..."); })
             .then(() => this.linterhub.analyze())
-            .then((data: string) => { return this.api.sendDiagnostics(data) })
-            .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`) })
+            .then((data: string) => { return this.api.sendDiagnostics(data); })
+            .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`); })
             .then((data) => {
                 this.status.update({ id: this.project }, false, "Active");
-                this.logger.info(`Finish analyze project.`)
+                this.logger.info(`Finish analyze project.`);
                 return data;
-            })
+            });
     }
 
     /**
@@ -169,11 +210,11 @@ export class Integration {
      * @param document The active document.
      */
     analyzeFile(path: string, run: Run = Run.none, document: any = null): Promise<any> {
-        if (this.settings.linterhub.run.indexOf(run) < 0 && run != Run.force) {
+        if (this.settings.linterhub.run.indexOf(run) < 0 && run !== Run.force) {
             return null;
         }
 
-        if (document != null) {
+        if (document !== null) {
             // TODO
         }
 
@@ -182,12 +223,12 @@ export class Integration {
             .then(() => this.status.update({ id: path }, true, "Analyzing file..."))
             .then(() => this.linterhub.analyzeFile(this.api.normalizePath(path)))
             .then((data: string) => {
-                return this.api.sendDiagnostics(data, document)
+                return this.api.sendDiagnostics(data, document);
             })
-            .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`) })
+            .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`); })
             .then((data) => {
-                this.status.update({ id: path }, false, "Active")
-                this.logger.info(`Finish analyze file '${path}'.`)
+                this.status.update({ id: path }, false, "Active");
+                this.logger.info(`Finish analyze file '${path}'.`);
                 return data;
             });
     }
@@ -226,6 +267,22 @@ export class Integration {
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
+
+    /**
+     * Ignore warning.
+     *
+     * @param {IgnoreWarningParams} params Describes warning.
+     */
+    ignoreWarning(params: Types.IgnoreWarningParams): Promise<string> {
+        return this.onReady
+            .then(() => this.linterhub.ignoreWarning(params))
+            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`))
+            .then((result) => {
+                this.logger.info(`Rule added!`);
+                return result;
+            });
+    }
+
     /**
      * Get the linter version.
      *

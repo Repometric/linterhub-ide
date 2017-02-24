@@ -4,9 +4,9 @@ import * as path from 'path';
 import { parse as parseUrl } from 'url';
 import { Proxy } from './proxy';
 import { PlatformInformation } from './platform';
-import { executeChildProcess } from './util'
-import { LinterhubMode } from './linterhub-cli'
-import { LoggerInterface, StatusInterface } from './integration'
+import { executeChildProcess } from './util';
+import { LinterhubMode } from './linterhub-cli';
+import { LoggerInterface, StatusInterface } from './integration';
 import { mkdirp } from 'mkdirp';
 import * as yauzl from 'yauzl';
 
@@ -46,7 +46,7 @@ export class LinterhubPackage {
         return "unknown";
     }
     getPackageFullName(): string {
-        return "linterhub-cli-" + this.getPackageName() + "-" + this.version;
+        return "linterhub-cli-" + this.getPackageName();
     }
     getPackageFileName(): string {
         return this.getPackageFullName() + ".zip";
@@ -96,7 +96,7 @@ export class NetworkHelper {
                     return resolve(this.downloadFile(response.headers.location, pathx, proxy, strictSSL, status));
                 }
 
-                if (response.statusCode != 200) {
+                if (response.statusCode !== 200) {
                     return reject(new Error(response.statusCode.toString()));
                 }
 
@@ -149,12 +149,12 @@ export namespace LinterhubInstallation {
       */
     export function install(mode: LinterhubMode, folder: string, proxy: string, strictSSL: boolean, log: LoggerInterface, status: StatusInterface, version: string): Promise<string> {
         // TODO
-        if (mode == LinterhubMode.docker) {
+        if (mode === LinterhubMode.docker) {
             return downloadDock("repometric/linterhub-cli");
         } else {
             return PlatformInformation.GetCurrent().then(info => {
                 log.info("Platform: " + info.toString());
-                let helper = new LinterhubPackage(info, folder, mode == LinterhubMode.native, version);
+                let helper = new LinterhubPackage(info, folder, mode === LinterhubMode.native, version);
                 let name = helper.getPackageFullName();
                 log.info("Name: " + name);
                 let networkHelper = new NetworkHelper();
@@ -220,8 +220,8 @@ export namespace LinterhubInstallation {
                     log.error(err.toString());
                     reject(new Error('Zip File Error:' + err.code || ''));
                 });
-            })
-        })
+            });
+        });
 
     }
 
