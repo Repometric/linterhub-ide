@@ -25,29 +25,3 @@ export function executeChildProcess(command: string, workingDirectory: string = 
 
     return promise;
 }
-
-/**
-  * Class that caches values
-  * @class Cacheable
-  */
-export class Cacheable {
-    private value: {} = null;
-    private action: () => Promise<{}>;
-    constructor(action: () => Promise<{}>) {
-        this.action = action;
-    }
-    getValue(): Promise<{}> {
-        let that = this;
-        let promise = new Promise((resolve, reject) => {
-            if (that.value === null) {
-                that.action().then(value => {
-                    that.value = value;
-                    resolve(that.value);
-                }).catch(error => reject(error));
-            } else {
-                resolve(that.value);
-            }
-        });
-        return promise;
-    }
-}

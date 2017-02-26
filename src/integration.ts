@@ -1,4 +1,4 @@
-import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli';
+import { LinterhubCli, LinterhubMode } from './linterhub-cli';
 import { LinterhubInstallation } from './linterhub-installer';
 import { Types } from './types';
 import * as fs from 'fs';
@@ -105,7 +105,7 @@ export interface Settings {
 export class Integration {
     protected systemId: string = "_system";
     protected linterhub_version: string;
-    protected linterhub: LinterhubCliLazy;
+    protected linterhub: LinterhubCli;
     protected project: string;
     protected logger: LoggerInterface;
     protected status: StatusInterface;
@@ -123,7 +123,7 @@ export class Integration {
     }
 
     public initializeLinterhub() {
-        this.linterhub = new LinterhubCliLazy(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+        this.linterhub = new LinterhubCli(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
         this.onReady = this.linterhub.version();
         return this.onReady;
     }
