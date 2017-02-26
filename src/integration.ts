@@ -314,10 +314,10 @@ export class Integration {
      */
     deactivate(name: string): Promise<string> {
         return this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true))
+            .then(() => this.status.update({ id: this.systemId }, true, "Deactivating " + name + "..."))
             .then(() => this.linterhub.deactivate(name))
             .catch((reason) => this.logger.error(`Error deactivate '${reason}.toString()'.`))
-            .then(() => this.status.update({ id: this.systemId }, false))
+            .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
 
