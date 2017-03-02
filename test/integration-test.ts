@@ -52,7 +52,7 @@ describe('Integration class', function () {
         }
     };
     describe('version method', function () {
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "version", function (): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "version", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });
@@ -70,7 +70,7 @@ describe('Integration class', function () {
     });
     describe('analyze method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "analyze", function (): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "analyze", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve(JSON.stringify(data));
             });
@@ -154,7 +154,7 @@ describe('Integration class', function () {
     });
     describe('analyzeFile method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "analyzeFile", function (name: string, install: boolean): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "analyzeFile", function (name: string, install: boolean): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve(JSON.stringify(data));
             });
@@ -194,7 +194,7 @@ describe('Integration class', function () {
         });
     });
     describe('linterVersion method', function () {
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "linterVersion", function (name: string, install: boolean): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "linterVersion", function (name: string, install: boolean): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve("{\"LinterName\":\"" + name + "\",\"Installed\":true,\"Version\":\"v1.0.4\"}");
             });
@@ -221,7 +221,7 @@ describe('Integration class', function () {
         });
     });
     describe('ignoreWarning method', function () {
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "ignoreWarning", function (params: Types.IgnoreWarningParams): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "ignoreWarning", function (params: Types.IgnoreWarningParams): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });
@@ -240,7 +240,7 @@ describe('Integration class', function () {
     describe('catalog method', function () {
         var data: string = "[{\"name\":\"linter1\",\"description\":\"description1\",\"languages\":\"coffeescript\",\"active\":false}," +
             "{\"name\":\"linter2\",\"description\":\"description2\",\"languages\":\"css\",\"active\":true}]";
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "catalog", function (): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "catalog", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve(data);
             });
@@ -262,7 +262,7 @@ describe('Integration class', function () {
         });
     });
     describe('deactivate method', function () {
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "deactivate", function (): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "deactivate", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });
@@ -281,7 +281,7 @@ describe('Integration class', function () {
         });
     });
     describe('activate method', function () {
-        var spy = sinon.stub(cli.LinterhubCliLazy.prototype, "activate", function (): Promise<string> {
+        var spy = sinon.stub(cli.LinterhubCli.prototype, "activate", function (): Promise<string> {
             return new Promise((resolve, reject) => {
                 resolve();
             });

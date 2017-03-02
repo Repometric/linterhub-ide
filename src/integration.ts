@@ -1,4 +1,4 @@
-import { LinterhubCliLazy, LinterhubMode } from './linterhub-cli';
+import { LinterhubCli, LinterhubMode } from './linterhub-cli';
 import { LinterhubInstallation } from './linterhub-installer';
 import { Types } from './types';
 import * as fs from 'fs';
@@ -105,7 +105,7 @@ export interface Settings {
 export class Integration {
     protected systemId: string = "_system";
     protected linterhub_version: string;
-    protected linterhub: LinterhubCliLazy;
+    protected linterhub: LinterhubCli;
     protected project: string;
     protected logger: LoggerInterface;
     protected status: StatusInterface;
@@ -123,7 +123,7 @@ export class Integration {
     }
 
     public initializeLinterhub() {
-        this.linterhub = new LinterhubCliLazy(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+        this.linterhub = new LinterhubCli(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
         this.onReady = this.linterhub.version();
         return this.onReady;
     }
@@ -257,7 +257,7 @@ export class Integration {
     /**
      * Activate linter.
      *
-     * @param path The linter name.
+     * @param name The linter name.
      */
     activate(name: string): Promise<string> {
         return this.onReady
@@ -286,7 +286,8 @@ export class Integration {
     /**
      * Get the linter version.
      *
-     * @param path The linter name.
+     * @param name The linter name.
+     * @param install Install linter or not
      */
     linterVersion(name: string, install: boolean): Promise<Types.LinterVersionResult> {
         return this.onReady
@@ -310,14 +311,14 @@ export class Integration {
     /**
      * Deactivate linter.
      *
-     * @param path The linter name.
+     * @param name The linter name.
      */
     deactivate(name: string): Promise<string> {
         return this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true))
+            .then(() => this.status.update({ id: this.systemId }, true, "Deactivating " + name + "..."))
             .then(() => this.linterhub.deactivate(name))
             .catch((reason) => this.logger.error(`Error deactivate '${reason}.toString()'.`))
-            .then(() => this.status.update({ id: this.systemId }, false))
+            .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
     }
 

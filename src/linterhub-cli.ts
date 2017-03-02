@@ -1,4 +1,4 @@
-import { Cacheable, executeChildProcess } from './util';
+import { executeChildProcess } from './util';
 import { LoggerInterface } from './integration';
 import * as path from 'path';
 import { Types } from './types';
@@ -201,25 +201,5 @@ export class LinterhubCli {
     }
     version() {
         return this.execute(this.args.version());
-    }
-}
-
-/**
-  * Extends LinterhubCli, use caching for Catalog and Version api functions
-  * @class LinterhubCliLazy
-  */
-export class LinterhubCliLazy extends LinterhubCli {
-    private catalogValue: Cacheable;
-    private versionValue: Cacheable;
-    constructor(log: any, cliRoot: string, project: string, mode: LinterhubMode = LinterhubMode.dotnet) {
-        super(log, cliRoot, project, mode);
-        this.catalogValue = new Cacheable(() => super.catalog());
-        this.versionValue = new Cacheable(() => super.version());
-    }
-    catalog() {
-        return this.catalogValue.getValue();
-    }
-    version() {
-        return this.versionValue.getValue();
     }
 }

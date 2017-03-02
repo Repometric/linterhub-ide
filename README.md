@@ -1,8 +1,9 @@
 Linterhub IDE Package
 =====
-Small package with shared classes for all linterhub extensions:
+Small package with shared classes for linterhub extensions:
 * [Linterhub Atom Extension](https://github.com/Repometric/linterhub-atom)
 * [Linterhub VSCode Extension](https://github.com/Repometric/linterhub-vscode)
+* [Linterhub Brackets Extension](https://github.com/Repometric/linterhub-brackets)
 
 To install this package type `npm install linterhub-ide`
 
