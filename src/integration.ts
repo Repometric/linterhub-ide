@@ -257,7 +257,7 @@ export class Integration {
     /**
      * Activate linter.
      *
-     * @param path The linter name.
+     * @param name The linter name.
      */
     activate(name: string): Promise<string> {
         return this.onReady
@@ -286,7 +286,8 @@ export class Integration {
     /**
      * Get the linter version.
      *
-     * @param path The linter name.
+     * @param name The linter name.
+     * @param install Install linter or not
      */
     linterVersion(name: string, install: boolean): Promise<Types.LinterVersionResult> {
         return this.onReady
@@ -310,7 +311,7 @@ export class Integration {
     /**
      * Deactivate linter.
      *
-     * @param path The linter name.
+     * @param name The linter name.
      */
     deactivate(name: string): Promise<string> {
         return this.onReady
