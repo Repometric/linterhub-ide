@@ -1,160 +1,81 @@
-import { LinterhubCli, LinterhubMode } from './linterhub-cli';
-import { LinterhubInstallation } from './linterhub-installer';
-import { Types } from './types';
+import { LinterhubTypes } from './linterhub-types';
+import { LinterhubInstaller } from './linterhub-installer';
+import { LinterhubArgs } from './linterhub-args';
 import * as fs from 'fs';
+import * as cp from 'child_process';
 
-export enum Run {
-    none,
-    force,
-    onStart,
-    onOpen,
-    onType,
-    onSave
-}
+export class Linterhub {
+    private static systemId: string = "_system";
+    private static linterhub_version: string = "0.3.4";
+    private static project: string;
+    private static logger: LinterhubTypes.LoggerInterface;
+    private static status: LinterhubTypes.StatusInterface;
+    private static args: LinterhubArgs;
 
-export interface AnalyzeResultInterface
-{
-    Name: string;
-    Model: {
-        Files: AnalyzeFileInterface[];
-        ParseErrors: {
-            ErrorMessage: string;
-            Input: any;
-        };
-    };
-}
+    private static onReady: Promise<{}>;
 
-export interface AnalyzeFileInterface
-{
-    Path: string;
-    Errors: AnalyzeErrorInterface[];
-}
-
-export interface AnalyzeErrorInterface
-{
-    Message: string;
-    Severity: number;
-    Line: number;
-    Evidence: string;
-    Rule: {
-        Name: string;
-        Id: string;
-        Namespace: string;
-    };
-    Column: AnalyzeIntervalInterface;
-    Row: AnalyzeIntervalInterface;
-}
-
-export interface AnalyzeIntervalInterface
-{
-    Start: number;
-    End: number;
-}
-
-/**
-  * Describes logger provider
-  * @interface LoggerInterface
-  */
-export interface LoggerInterface {
-    /**
-      * Prints ordinary information
-      * @method info
-      * @param {string} log Text to print
-      */
-    info(log: string): void;
+    private static settings: LinterhubTypes.Settings;
+    private static integration: any;
 
     /**
-      * Prints errors
-      * @method error
-      * @param {string} log Text to print
-      */
-    error(log: string): void;
+     * Function that execute command (used to communicate with cli)
+     * @method executeChildProcess
+     * @param {string} command Command to execute
+     * @param {string} workingDirectory Working directory of process
+     * @returns {Promise<string>} Returns stdout
+     */
+    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliRoot): Promise<string> {
+        // TODO: Return ChildProcess in order to stop it when needed
+        let promise = new Promise((resolve, reject) => {
+            // TODO: Use spawn and buffers.
+            cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
+                let execError = stderr.toString();
+                if (error) {
+                    reject(new Error(error.message));
+                } else if (execError !== '') {
+                    reject(new Error(execError));
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
 
-    /**
-      * Prints warnings
-      * @method warn
-      * @param {string} log Text to print
-      */
-    warn(log: string): void;
-}
-
-/**
-  * Describes status provider
-  * @interface StatusInterface
-  */
-export interface StatusInterface {
-    /**
-      * Updates status string
-      * @method update
-      * @param {string} text New status
-      */
-    update(params: any, progress?: boolean, text?: string): void;
-}
-
-export interface Settings {
-    linterhub: {
-        enable: boolean;
-        run: Run[];
-        mode: LinterhubMode;
-        cliPath: string;
-        cliRoot: string;
-    };
-    [key: string]: any;
-}
-
-export class Integration {
-    protected systemId: string = "_system";
-    protected linterhub_version: string;
-    protected linterhub: LinterhubCli;
-    protected project: string;
-    protected logger: LoggerInterface;
-    protected status: StatusInterface;
-
-    protected onReady: Promise<{}>;
-
-    protected settings: Settings;
-    protected api: any;
+        return promise;
+    }
 
     /**
      * Returns current settings
      */
-    public getSettings(): Settings {
+    public static getSettings(): LinterhubTypes.Settings {
         return this.settings;
     }
 
-    public initializeLinterhub() {
-        this.linterhub = new LinterhubCli(this.logger, this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
-        this.onReady = this.linterhub.version();
-        return this.onReady;
-    }
-
-    constructor(api: any, settings: any) {
-        this.logger = api.logger;
-        this.status = api.status;
-        this.project = api.project;
-        this.linterhub_version = api.linterhub_version;
-        this.api = api;
+    public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings) {
+        this.logger = integration.logger;
+        this.status = integration.status;
+        this.project = integration.project;
+        this.integration = integration;
         this.settings = settings;
         if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
             this.install()
-                .then(() => this.initializeLinterhub())
-                .then(() => this.api.saveConfig(this.settings));
-        }
-        else {
-            this.onReady = this.initializeLinterhub();
+                .catch((error) => this.settings.linterhub.enable = false)
+                .then(() => {
+                    this.integration.saveConfig(this.settings)
+                    this.settings.linterhub.enable = true;
+                });
         }
     }
 
-    install(): Promise<string> {
+    private static install(): Promise<String> {
         this.status.update({ id: this.systemId }, true, "Start install process..");
 
-        return LinterhubInstallation.getDotnetVersion()
-            .then(() => { this.settings.linterhub.mode = LinterhubMode.dotnet; })
-            .catch(() => { this.settings.linterhub.mode = LinterhubMode.native; })
+        return LinterhubInstaller.getDotnetVersion()
+            .then(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.dotnet; })
+            .catch(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.native; })
             .then(() => { this.logger.info(`Start download.`); })
             .then(() => {
 
-                return LinterhubInstallation.install(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, null, true, this.logger, this.status, this.linterhub_version)
+                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.status, this.linterhub_version)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
                         this.logger.info(data);
@@ -173,7 +94,7 @@ export class Integration {
 
     }
 
-    initialize(settings: Settings = null) {
+    /*initialize(settings: Settings = null) {
 
         this.settings = settings;
         this.settings.linterhub.run = this.settings.linterhub.run.map(value => Run[value.toString()]);
@@ -181,25 +102,25 @@ export class Integration {
         return this.initializeLinterhub();
         //this.connection.sendRequest(ConfigRequest)
         //    .then((x: ConfigResult) => { this.connection.console.info(x.proxy); });
-    }
+    }*/
 
 
     /**
      * Analyze project.
      *
      */
-    analyze(): Promise<any> {
+    public static analyze(): Promise<any> {
         return this.onReady
             .then(() => { this.logger.info(`Analyze project.`); })
             .then(() => { this.status.update({ id: this.project }, true, "Analyzing project..."); })
-            .then(() => this.linterhub.analyze())
-            .then((data: string) => { return this.api.sendDiagnostics(data); })
-            .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`); })
-            .then((data) => {
-                this.status.update({ id: this.project }, false, "Active");
-                this.logger.info(`Finish analyze project.`);
-                return data;
-            });
+            .then(() => this.executeChildProcess(this.args.analyze()))
+                .then((data: string) => { return this.integration.sendDiagnostics(data); })
+                .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`); })
+                .then((data) => {
+                    this.status.update({ id: this.project }, false, "Active");
+                    this.logger.info(`Finish analyze project.`);
+                    return data;
+                });
     }
 
     /**
@@ -209,8 +130,8 @@ export class Integration {
      * @param run The run mode (when).
      * @param document The active document.
      */
-    analyzeFile(path: string, run: Run = Run.none, document: any = null): Promise<any> {
-        if (this.settings.linterhub.run.indexOf(run) < 0 && run !== Run.force) {
+    public static analyzeFile(path: string, run: LinterhubTypes.Run = LinterhubTypes.Run.none, document: any = null): Promise<any> {
+        if (this.settings.linterhub.run.indexOf(run) < 0 && run !== LinterhubTypes.Run.force) {
             return null;
         }
 
@@ -221,9 +142,9 @@ export class Integration {
         return this.onReady
             .then(() => this.logger.info(`Analyze file '${path}'.`))
             .then(() => this.status.update({ id: path }, true, "Analyzing file..."))
-            .then(() => this.linterhub.analyzeFile(this.api.normalizePath(path)))
+            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(path))))
             .then((data: string) => {
-                return this.api.sendDiagnostics(data, document);
+                return this.integration.sendDiagnostics(data, document);
             })
             .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`); })
             .then((data) => {
@@ -232,14 +153,15 @@ export class Integration {
                 return data;
             });
     }
+
     /**
      * Get linters catalog.
      *
      */
-    catalog(): Promise<Types.LinterResult[]> {
+    public static catalog(): Promise<LinterhubTypes.LinterResult[]> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Getting linters catalog.."))
-            .then(() => this.linterhub.catalog())
+            .then(() => this.executeChildProcess(this.args.catalog()))
             .then((data: string) => {
                 let json: any = JSON.parse(data);
                 this.logger.info(data);
@@ -259,10 +181,10 @@ export class Integration {
      *
      * @param name The linter name.
      */
-    activate(name: string): Promise<string> {
+    public static activate(name: string): Promise<string> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Activating " + name + "..."))
-            .then(() => this.linterhub.activate(name))
+            .then(() => this.executeChildProcess(this.args.activate(name)))
             .catch((reason) => this.logger.error(`Error activate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
@@ -273,9 +195,9 @@ export class Integration {
      *
      * @param {IgnoreWarningParams} params Describes warning.
      */
-    ignoreWarning(params: Types.IgnoreWarningParams): Promise<string> {
+    public static ignoreWarning(params: LinterhubTypes.IgnoreWarningParams): Promise<string> {
         return this.onReady
-            .then(() => this.linterhub.ignoreWarning(params))
+            .then(() => this.executeChildProcess(this.args.ignoreWarning(params)))
             .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`))
             .then((result) => {
                 this.logger.info(`Rule added!`);
@@ -289,12 +211,12 @@ export class Integration {
      * @param name The linter name.
      * @param install Install linter or not
      */
-    linterVersion(name: string, install: boolean): Promise<Types.LinterVersionResult> {
+    public static linterVersion(name: string, install: boolean): Promise<LinterhubTypes.LinterVersionResult> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true))
-            .then(() => this.linterhub.linterVersion(name, install))
+            .then(() => this.executeChildProcess(this.args.linterVersion(name, install)))
             .then((data: string) => {
-                let json: Types.LinterVersionResult = JSON.parse(data);
+                let json: LinterhubTypes.LinterVersionResult = JSON.parse(data);
                 this.logger.info(data);
                 return json;
             })
@@ -313,10 +235,10 @@ export class Integration {
      *
      * @param name The linter name.
      */
-    deactivate(name: string): Promise<string> {
+    public static deactivate(name: string): Promise<string> {
         return this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Deactivating " + name + "..."))
-            .then(() => this.linterhub.deactivate(name))
+            .then(() => this.executeChildProcess(this.args.deactivate(name)))
             .catch((reason) => this.logger.error(`Error deactivate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
@@ -326,10 +248,10 @@ export class Integration {
      * Get linterhub and other versions.
      *
      */
-    version(): Promise<string> {
+    public static version(): Promise<string> {
         return this.onReady
             .then(() => {
-                return this.linterhub.version();
+                return this.executeChildProcess(this.args.version());
             })
             .catch((reason) => this.logger.error(reason.toString()));
     }
