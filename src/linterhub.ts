@@ -54,7 +54,7 @@ export class Linterhub {
         this.logger = integration.logger;
         this.status = integration.status;
         this.project = integration.project;
-        this.integration = integration;
+        this.integration = integration; 
         this.settings = settings;
         if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
             this.install()

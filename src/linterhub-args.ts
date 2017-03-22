@@ -1,26 +1,5 @@
-import { executeChildProcess } from './util';
-import { LoggerInterface } from './integration';
 import * as path from 'path';
-import { Types } from './types';
-
-/**
-  * List of mode how to execute Linterhub Cli
-  * @enum LinterhubMode
-  */
-export enum LinterhubMode {
-    /**
-     * Using 'dotnet' command
-     */
-    dotnet,
-    /**
-     * Just run dll
-     */
-    native,
-    /**
-     * Run linterhub in docker
-     */
-    docker
-}
+import { LinterhubTypes } from './linterhub-types';
 
 /**
   * This class generates commands to Linterhub
@@ -30,27 +9,28 @@ export class LinterhubArgs {
     private cliRoot: string;
     private cliPath: string;
     private project: string;
-    private mode: LinterhubMode;
+    private mode: LinterhubTypes.Mode;
 
     /**
       * @constructor
       * @param {string} cliRoot Directory where extension can find Linterhub Cli
       * @param {string} project Root of current project
-      * @param {LinterhubMode} mode Describes how to run Cli
+      * @param {LinterhubType.Mode} mode Describes how to run Cli
       */
-    constructor(cliRoot: string, project: string, mode: LinterhubMode = LinterhubMode.dotnet) {
+    constructor(cliRoot: string, project: string, mode: LinterhubTypes.Mode = LinterhubTypes.Mode.dotnet) {
         this.project = project;
         this.cliRoot = cliRoot;
         this.mode = mode;
         this.cliPath = this.prefix() + ' ';
     }
-    public prefix(): string {
+
+    private prefix(): string {
         switch (this.mode) {
-            case LinterhubMode.dotnet:
+            case LinterhubTypes.Mode.dotnet:
                 return 'dotnet ' + path.join(this.cliRoot, 'cli.dll');
-            case LinterhubMode.native:
+            case LinterhubTypes.Mode.native:
                 return path.join(this.cliRoot, 'cli');
-            case LinterhubMode.docker:
+            case LinterhubTypes.Mode.docker:
                 return 'TODO';
         }
 
@@ -62,7 +42,7 @@ export class LinterhubArgs {
       * @method analyze
       * @returns {string} Command to CLI
       */
-    analyze(): string {
+    public analyze(): string {
         return this.cliPath + `--mode=analyze --project=${this.project}`;
     }
 
@@ -72,7 +52,7 @@ export class LinterhubArgs {
       * @param {string} file Path to this file
       * @returns {string} Command to CLI
       */
-    analyzeFile(file: string): string {
+    public analyzeFile(file: string): string {
         // TODO: Improve this code.
         //let path = Uri.parse(file).fsPath;
         let path = file;
@@ -88,7 +68,7 @@ export class LinterhubArgs {
       * @param {string} linter Name of linter
       * @returns {string} Command to CLI
       */
-    activate(linter: string): string {
+    public activate(linter: string): string {
         return this.cliPath + `--mode=activate --project=${this.project} --active=true --linter=${linter}`;
     }
 
@@ -99,7 +79,7 @@ export class LinterhubArgs {
       * @param {boolean} install Try to install linter or not (need su)
       * @returns {string} Command to CLI
       */
-    linterVersion(linter: string, install: boolean): string {
+    public linterVersion(linter: string, install: boolean): string {
         return this.cliPath + (install ? `--mode=LinterInstall --linter=${linter}` : `--mode=LinterVersion --linter=${linter}`);
     }
 
@@ -109,7 +89,7 @@ export class LinterhubArgs {
       * @param {string} linter Name of linter
       * @returns {string} Command to CLI
       */
-    deactivate(linter: string): string {
+    public deactivate(linter: string): string {
         return this.cliPath + `--mode=activate --project=${this.project} --active=false --linter=${linter}`;
     }
 
@@ -118,17 +98,17 @@ export class LinterhubArgs {
       * @method catalog
       * @returns {string} Command to CLI
       */
-    catalog(): string {
+    public catalog(): string {
         return this.cliPath + `--mode=catalog --project=${this.project}`;
     }
 
     /**
       * Add ignore rule
       * @method ignoreWarning
-      * @param {IgnoreWarningParams} params Describes warning.
+      * @param {LinterhubTypes.IgnoreWarningParams} params Describes warning.
       * @returns {string} Command to CLI
       */
-    ignoreWarning(params: Types.IgnoreWarningParams): string {
+    public ignoreWarning(params: LinterhubTypes.IgnoreWarningParams): string {
         let command: string = this.cliPath + `--mode=ignore --project=${this.project}`;
         if (params.error !== null) {
             command += " --error=" + params.error;
@@ -144,62 +124,10 @@ export class LinterhubArgs {
 
     /**
       * Receive version of CLI, Linterhub etc
-      * @method analyze
+      * @method version
       * @returns {string} Command to CLI
       */
-    version(): string {
+    public version(): string {
         return this.cliPath + `--mode=version`;
-    }
-}
-
-/**
-  * This class executes commands to Linterhub Cli
-  * @class LinterhubCli
-  */
-export class LinterhubCli {
-    private args: LinterhubArgs;
-    private cliRoot: string;
-    private log: any;
-
-    /**
-      * @constructor
-      * @param {LoggerInterface} log Object that will be used for logging
-      * @param {string} cliRoot Directory where extension can find Linterhub Cli
-      * @param {string} project Root of current project
-      * @param {LinterhubMode} mode Describes how to run Cli
-      */
-    constructor(log: LoggerInterface, cliRoot: string, project: string, mode: LinterhubMode = LinterhubMode.dotnet) {
-        this.args = new LinterhubArgs(cliRoot, project, mode);
-        this.cliRoot = cliRoot;
-        this.log = log;
-    }
-    public execute(command: string): Promise<{}> {
-        // TODO: Return ChildProcess in order to stop analysis when document is closed
-        this.log.info('Execute command: ' + command);
-        return executeChildProcess(command, this.cliRoot);
-    }
-    analyze(): Promise<{}> {
-        return this.execute(this.args.analyze());
-    }
-    analyzeFile(file: string): Promise<{}> {
-        return this.execute(this.args.analyzeFile(file));
-    }
-    catalog(): Promise<{}> {
-        return this.execute(this.args.catalog());
-    }
-    activate(linter: string): Promise<{}> {
-        return this.execute(this.args.activate(linter));
-    }
-    ignoreWarning(params: Types.IgnoreWarningParams): Promise<{}> {
-        return this.execute(this.args.ignoreWarning(params));
-    }
-    linterVersion(linter: string, install: boolean): Promise<{}> {
-        return this.execute(this.args.linterVersion(linter, install));
-    }
-    deactivate(linter: string): Promise<{}> {
-        return this.execute(this.args.deactivate(linter));;
-    }
-    version() {
-        return this.execute(this.args.version());
     }
 }

@@ -31,6 +31,16 @@ export namespace LinterhubTypes {
 		};
 	}
 
+	export interface Integration
+	{
+		project: string;
+		logger: LoggerInterface;
+		status: StatusInterface;
+		saveConfig: Function;
+		sendDiagnostics: Function;
+		normalizePath: Function;
+	}
+
 	export interface AnalyzeFileInterface
 	{
 		Path: string;

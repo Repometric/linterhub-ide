@@ -22,9 +22,11 @@ class LinterhubPackage {
         this.folder = folder;
         this.version = version;
     }
+
     getPackageVersion(): string {
         return this.version;
     }
+
     getPackageName(): string {
         if (!this.native) {
             return "dotnet";
@@ -41,6 +43,7 @@ class LinterhubPackage {
         }
         return "unknown";
     }
+
     getPackageFullName(): string {
         return "linterhub-cli-" + this.getPackageName();
     }
