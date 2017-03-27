@@ -24,11 +24,13 @@ export class Linterhub {
      * @param {string} workingDirectory Working directory of process
      * @returns {Promise<string>} Returns stdout
      */
-    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliRoot): Promise<string> {
+    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliPath): Promise<string> {
         // TODO: Return ChildProcess in order to stop it when needed
         let promise = new Promise((resolve, reject) => {
             // TODO: Use spawn and buffers.
             cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
+                console.log("Execute: " + command);
+                console.log(stdout);
                 let execError = stderr.toString();
                 if (error) {
                     reject(new Error(error.message));
@@ -51,6 +53,7 @@ export class Linterhub {
     }
 
     public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings) {
+        this.onReady = new Promise((resolve, reject) => {});
         this.logger = integration.logger;
         this.status = integration.status;
         this.project = integration.project;
@@ -62,7 +65,14 @@ export class Linterhub {
                 .then(() => {
                     this.integration.saveConfig(this.settings)
                     this.settings.linterhub.enable = true;
+                    this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+                    this.onReady = this.executeChildProcess(this.args.version());
                 });
+        }
+        else
+        {
+            this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+            this.onReady = this.executeChildProcess(this.args.version());
         }
     }
 
@@ -78,17 +88,13 @@ export class Linterhub {
                 return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.status, this.linterhub_version)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
-                        this.logger.info(data);
+                        this.status.update({ id: this.systemId }, false, "Active");
+                        this.settings.linterhub.cliPath = data;
                         return data;
                     })
                     .catch((reason) => {
-                        this.logger.error(`Error catalog '${reason}.toString()'.`);
+                        this.logger.error('Error while installing ' + reason + '.');
                         return "";
-                    })
-                    .then((result) => {
-                        this.status.update({ id: this.systemId }, false, "Active");
-                        this.settings.linterhub.cliPath = result;
-                        return result;
                     });
             });
 
@@ -146,7 +152,7 @@ export class Linterhub {
             .then((data: string) => {
                 return this.integration.sendDiagnostics(data, document);
             })
-            .catch((reason) => { this.logger.error(`Error analyze file '${reason}.toString()'.`); })
+            .catch((reason) => { this.logger.error(`Error analyze file ` + reason); })
             .then((data) => {
                 this.status.update({ id: path }, false, "Active");
                 this.logger.info(`Finish analyze file '${path}'.`);

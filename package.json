@@ -1,6 +1,6 @@
 {
   "name": "linterhub-ide",
-  "version": "0.4.0",
+  "version": "0.4.3",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "js/src/index.js",
   "typings": "js/src/index.d.ts",
@@ -30,6 +30,7 @@
     "sinon": "^1.17.1",
     "@types/node": "^7.0.5",
     "request-progress": "^3.0.0",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "unzip": "^0.1.11"
   }
 }

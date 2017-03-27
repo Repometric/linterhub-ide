@@ -1,10 +1,11 @@
 import * as path from 'path';
 import { PlatformInformation } from './platform';
 import { Linterhub } from './linterhub';
-import request from 'request'
-import progress from 'request-progress'
-import* as zlib from 'zlib';
 import { LinterhubTypes } from './linterhub-types';
+var fs = require('fs');
+var request = require('request');
+var progress = require('request-progress');
+var unzip = require('unzip');
 
 /**
   * Class that provide information for downloading, installing and activating Linterhub
@@ -75,21 +76,27 @@ export namespace LinterhubInstaller {
         if (mode === LinterhubTypes.Mode.docker) {
             return downloadDock("repometric/linterhub-cli");
         } else {
-            return PlatformInformation.GetCurrent().then(info => {
-                log.info("Platform: " + info.toString());
-                let helper = new LinterhubPackage(info, folder, mode === LinterhubTypes.Mode.native, version);
-                let name = helper.getPackageFullName();
-                log.info("Name: " + name);
-                progress(request(helper.getPackageUrl()))
-                    .on('progress', state => {
-                        status.update(null, true, 'Downloading.. (' + state.percentage * 100 + "%)");
-                    })
-                    .on('error', err => log.error(err))
-                    .on('end', () => {})
-                    .pipe(helper.getPackageFullFileName())
-                    .pipe(zlib.createGunzip())
-                    .pipe(folder);
-                return path.resolve(folder, 'bin', helper.getPackageName());
+            return new Promise((resolve, reject) => {
+                PlatformInformation.GetCurrent().then(info => {
+                    log.info("Platform: " + info.toString());
+                    let helper = new LinterhubPackage(info, folder, mode === LinterhubTypes.Mode.native, version);
+                    let name = helper.getPackageFullName();
+                    log.info("Name: " + name);
+                    progress(request(helper.getPackageUrl()), {})
+                        .on('progress', state => {
+                            var percent = Math.round(state.percent * 10000) / 100;
+                            status.update(null, true, 'Downloading.. (' + percent + "%)");
+                        })
+                        .on('error', err => log.error(err))
+                        .on('reponse', function(res){
+                            res.pipe(fs.createWriteStream(helper.getPackageFullFileName()));
+                        })
+                        .on('end', () => {
+                            log.info("Unzipping " + folder);
+                            fs.createReadStream(helper.getPackageFullFileName()).pipe(unzip.Extract({ path: folder }));
+                            resolve(path.resolve(folder, 'bin', helper.getPackageName()));
+                        })
+                });
             });
         }
     }
@@ -100,7 +107,7 @@ export namespace LinterhubInstaller {
       * @returns {Promise<string>} Stdout of command
       */
     export function getDockerVersion() {
-        return Linterhub.executeChildProcess("docker version --format '{{.Server.Version}}'").then(removeNewLine);
+        return Linterhub.executeChildProcess("docker version --format '{{.Server.Version}}'", null).then(removeNewLine);
     }
 
     /**
@@ -109,7 +116,7 @@ export namespace LinterhubInstaller {
       * @returns {Promise<string>} Stdout of command
       */
     export function getDotnetVersion() {
-        return Linterhub.executeChildProcess('dotnet --version').then(removeNewLine);
+        return Linterhub.executeChildProcess('dotnet --version', null).then(removeNewLine);
     }
 
     function removeNewLine(out: string): string {
@@ -123,6 +130,6 @@ export namespace LinterhubInstaller {
       * @returns {Promise<string>} Stdout of command
       */
     function downloadDock(name: string): Promise<string> {
-        return Linterhub.executeChildProcess("docker pull " + name);
+        return Linterhub.executeChildProcess("docker pull " + name, null);
     }
 }
