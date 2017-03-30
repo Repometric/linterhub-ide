@@ -69,9 +69,10 @@ export namespace LinterhubInstaller {
       * @param {LoggerInterface} log Object that will be used for logging
       * @param {StatusInterface} status Object that will be used for changing status
       * @param {string} version What version of Linterhub Cli to install
+      * @param {string} proxy Proxy to use
       * @returns {Promise<string>} Path to Cli
       */
-    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, status: LinterhubTypes.StatusInterface, version: string): Promise<string> {
+    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, status: LinterhubTypes.StatusInterface, version: string, proxy: string): Promise<string> {
         // TODO
         if (mode === LinterhubTypes.Mode.docker) {
             return downloadDock("repometric/linterhub-cli");
@@ -82,7 +83,10 @@ export namespace LinterhubInstaller {
                     let helper = new LinterhubPackage(info, folder, mode === LinterhubTypes.Mode.native, version);
                     let name = helper.getPackageFullName();
                     log.info("Name: " + name);
-                    progress(request(helper.getPackageUrl()), {})
+                    progress(request({
+                            url: helper.getPackageUrl(),
+                            proxy: proxy
+                        }), {})
                         .on('progress', state => {
                             var percent = Math.round(state.percent * 10000) / 100;
                             status.update(null, true, 'Downloading.. (' + percent + "%)");

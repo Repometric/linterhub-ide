@@ -11,6 +11,7 @@ export class Linterhub {
     private static logger: LinterhubTypes.LoggerInterface;
     private static status: LinterhubTypes.StatusInterface;
     private static args: LinterhubArgs;
+    private static proxy: string;
 
     private static onReady: Promise<{}>;
 
@@ -52,7 +53,15 @@ export class Linterhub {
         return this.settings;
     }
 
-    public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings) {
+    /**
+     * Set proxy for installing Linterhub
+     * @param proxy String like [protocol]://[username]:[pass]@[address]:[port]
+     */
+    public static setProxy(proxy: string): void {
+        this.proxy = proxy;
+    }
+
+    public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings): void {
         this.onReady = new Promise((resolve, reject) => {});
         this.logger = integration.logger;
         this.status = integration.status;
@@ -85,7 +94,7 @@ export class Linterhub {
             .then(() => { this.logger.info(`Start download.`); })
             .then(() => {
 
-                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.status, this.linterhub_version)
+                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.status, this.linterhub_version, this.proxy)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
                         this.status.update({ id: this.systemId }, false, "Active");
