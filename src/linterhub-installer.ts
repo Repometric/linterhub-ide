@@ -92,7 +92,7 @@ export namespace LinterhubInstaller {
                             status.update(null, true, 'Downloading.. (' + percent + "%)");
                         })
                         .on('error', err => log.error(err))
-                        .on('reponse', function(res){
+                        .on('response', function(res){
                             res.pipe(fs.createWriteStream(helper.getPackageFullFileName()));
                         })
                         .on('end', () => {
