@@ -53,13 +53,7 @@ export class LinterhubArgs {
       * @returns {string} Command to CLI
       */
     public analyzeFile(file: string): string {
-        // TODO: Improve this code.
-        //let path = Uri.parse(file).fsPath;
-        let path = file;
-        let normalizedPath = path.replace('file://', '')
-            .replace(this.project + '/', '')
-            .replace(this.project + '\\', '');
-        return this.cliPath + `--mode=analyze --project=${this.project} --file=${normalizedPath}`;
+        return this.cliPath + `--mode=analyze --project=${this.project} --file=${file}`;
     }
 
     /**

@@ -62,11 +62,11 @@ export class Linterhub {
     }
 
     public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings): void {
-        this.onReady = new Promise((resolve, reject) => {});
+        this.onReady = new Promise((resolve, reject) => { });
         this.logger = integration.logger;
         this.status = integration.status;
         this.project = integration.project;
-        this.integration = integration; 
+        this.integration = integration;
         this.settings = settings;
         if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
             this.install()
@@ -78,8 +78,7 @@ export class Linterhub {
                     this.onReady = this.executeChildProcess(this.args.version());
                 });
         }
-        else
-        {
+        else {
             this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
             this.onReady = this.executeChildProcess(this.args.version());
         }
@@ -109,33 +108,23 @@ export class Linterhub {
 
     }
 
-    /*initialize(settings: Settings = null) {
-
-        this.settings = settings;
-        this.settings.linterhub.run = this.settings.linterhub.run.map(value => Run[value.toString()]);
-        this.settings.linterhub.mode = LinterhubMode[this.settings.linterhub.mode.toString()];
-        return this.initializeLinterhub();
-        //this.connection.sendRequest(ConfigRequest)
-        //    .then((x: ConfigResult) => { this.connection.console.info(x.proxy); });
-    }*/
-
-
     /**
      * Analyze project.
      *
      */
     public static analyze(): Promise<any> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => { this.logger.info(`Analyze project.`); })
             .then(() => { this.status.update({ id: this.project }, true, "Analyzing project..."); })
             .then(() => this.executeChildProcess(this.args.analyze()))
-                .then((data: string) => { return this.integration.sendDiagnostics(data); })
-                .catch((reason) => { this.logger.error(`Error analyze project '${reason}.toString()'.`); })
-                .then((data) => {
-                    this.status.update({ id: this.project }, false, "Active");
-                    this.logger.info(`Finish analyze project.`);
-                    return data;
-                });
+            .then((data: string) => { return this.integration.sendDiagnostics(data); })
+            .catch((reason) => { this.logger.error(`Error analyze project '${reason}'.`); })
+            .then((data) => {
+                this.status.update({ id: this.project }, false, "Active");
+                this.logger.info(`Finish analyze project.`);
+                return data;
+            });
+        return this.onReady;
     }
 
     /**
@@ -154,10 +143,14 @@ export class Linterhub {
             // TODO
         }
 
-        return this.onReady
+        let relative_path = path.replace('file://', '')
+            .replace(this.project + '/', '')
+            .replace(this.project + '\\', '');
+
+        this.onReady = this.onReady
             .then(() => this.logger.info(`Analyze file '${path}'.`))
-            .then(() => this.status.update({ id: path }, true, "Analyzing file..."))
-            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(path))))
+            .then(() => this.status.update({ id: path }, true, "Analyzing file " + relative_path ))
+            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(relative_path))))
             .then((data: string) => {
                 return this.integration.sendDiagnostics(data, document);
             })
@@ -167,6 +160,7 @@ export class Linterhub {
                 this.logger.info(`Finish analyze file '${path}'.`);
                 return data;
             });
+        return this.onReady;
     }
 
     /**
@@ -174,7 +168,7 @@ export class Linterhub {
      *
      */
     public static catalog(): Promise<LinterhubTypes.LinterResult[]> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Getting linters catalog.."))
             .then(() => this.executeChildProcess(this.args.catalog()))
             .then((data: string) => {
@@ -183,13 +177,14 @@ export class Linterhub {
                 return json;
             })
             .catch((reason) => {
-                this.logger.error(`Error catalog '${reason}.toString()'.`);
+                this.logger.error(`Error catalog '${reason}'.`);
                 return [];
             })
             .then((result) => {
                 this.status.update({ id: this.systemId }, false, "Active");
                 return result;
             });
+        return this.onReady;
     }
     /**
      * Activate linter.
@@ -197,12 +192,12 @@ export class Linterhub {
      * @param name The linter name.
      */
     public static activate(name: string): Promise<string> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Activating " + name + "..."))
             .then(() => this.executeChildProcess(this.args.activate(name)))
-            .catch((reason) => this.logger.error(`Error activate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
+        return this.onReady;
     }
 
     /**
@@ -211,13 +206,14 @@ export class Linterhub {
      * @param {IgnoreWarningParams} params Describes warning.
      */
     public static ignoreWarning(params: LinterhubTypes.IgnoreWarningParams): Promise<string> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => this.executeChildProcess(this.args.ignoreWarning(params)))
-            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}.toString()'.`))
+            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}'.`))
             .then((result) => {
                 this.logger.info(`Rule added!`);
                 return result;
             });
+        return this.onReady;
     }
 
     /**
@@ -227,7 +223,7 @@ export class Linterhub {
      * @param install Install linter or not
      */
     public static linterVersion(name: string, install: boolean): Promise<LinterhubTypes.LinterVersionResult> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => this.status.update({ id: this.systemId }, true))
             .then(() => this.executeChildProcess(this.args.linterVersion(name, install)))
             .then((data: string) => {
@@ -236,13 +232,14 @@ export class Linterhub {
                 return json;
             })
             .catch((reason) => {
-                this.logger.error(`Error while requesting linter version '${reason}.toString()'.`);
+                this.logger.error(`Error while requesting linter version '${reason}'.`);
                 return null;
             })
             .then((result) => {
                 this.status.update({ id: this.systemId }, false);
                 return result;
             });
+        return this.onReady;
     }
 
     /**
@@ -251,12 +248,12 @@ export class Linterhub {
      * @param name The linter name.
      */
     public static deactivate(name: string): Promise<string> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => this.status.update({ id: this.systemId }, true, "Deactivating " + name + "..."))
             .then(() => this.executeChildProcess(this.args.deactivate(name)))
-            .catch((reason) => this.logger.error(`Error deactivate '${reason}.toString()'.`))
             .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
+        return this.onReady;
     }
 
     /**
@@ -264,10 +261,11 @@ export class Linterhub {
      *
      */
     public static version(): Promise<string> {
-        return this.onReady
+        this.onReady = this.onReady
             .then(() => {
                 return this.executeChildProcess(this.args.version());
             })
             .catch((reason) => this.logger.error(reason.toString()));
+        return this.onReady;
     }
 }

@@ -11,7 +11,7 @@ var unzip = require('unzip');
   * Class that provide information for downloading, installing and activating Linterhub
   * @class LinterhubPackage
   */
-class LinterhubPackage {
+export class LinterhubPackage {
     readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
     private version: string;
     private info: PlatformInformation;
@@ -133,7 +133,7 @@ export namespace LinterhubInstaller {
       * @param {string} name Name of image to download
       * @returns {Promise<string>} Stdout of command
       */
-    function downloadDock(name: string): Promise<string> {
+    export function downloadDock(name: string): Promise<string> {
         return Linterhub.executeChildProcess("docker pull " + name, null);
     }
 }
