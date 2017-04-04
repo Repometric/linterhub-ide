@@ -84,7 +84,7 @@ export class Linterhub {
         }
     }
 
-    private static install(): Promise<String> {
+    public static install(): Promise<String> {
         this.status.update({ id: this.systemId }, true, "Start install process..");
 
         return LinterhubInstaller.getDotnetVersion()
