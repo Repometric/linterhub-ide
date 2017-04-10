@@ -8,7 +8,7 @@ var progress = require('request-progress');
 var unzip = require('unzip');
 
 /**
-  * Class that provide information for downloading, installing and activating Linterhub
+  * Class that provide information for downloading, installing and activating of Linterhub
   * @class LinterhubPackage
   */
 export class LinterhubPackage {
@@ -24,10 +24,16 @@ export class LinterhubPackage {
         this.version = version;
     }
 
+    /**
+     * Returns package version
+     */
     getPackageVersion(): string {
         return this.version;
     }
 
+    /**
+     * Returns package name (based on system name and availability of dotnet)
+     */
     getPackageName(): string {
         if (!this.native) {
             return "dotnet";
@@ -45,15 +51,30 @@ export class LinterhubPackage {
         return "unknown";
     }
 
+    /**
+     * Full package name
+     */
     getPackageFullName(): string {
         return "linterhub-cli-" + this.getPackageName();
     }
+
+    /**
+     * Package file name
+     */
     getPackageFileName(): string {
         return this.getPackageFullName() + ".zip";
     }
+
+    /**
+     * Full path to package file
+     */
     getPackageFullFileName(): string {
         return path.join(this.folder, this.getPackageFileName());
     }
+
+    /**
+     * Url for downloading package (on github)
+     */
     getPackageUrl(): string {
         return this.prefix + this.version + "/" + this.getPackageFileName();
     }

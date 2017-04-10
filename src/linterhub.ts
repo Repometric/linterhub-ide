@@ -16,7 +16,7 @@ export class Linterhub {
     private static onReady: Promise<{}>;
 
     private static settings: LinterhubTypes.Settings;
-    private static integration: any;
+    private static integration: LinterhubTypes.Integration;
 
     /**
      * Function that execute command (used to communicate with cli)
@@ -48,6 +48,7 @@ export class Linterhub {
 
     /**
      * Returns current settings
+     * @returns {LinterhubTypes.Settings} Settings of Linterhub class
      */
     public static getSettings(): LinterhubTypes.Settings {
         return this.settings;
@@ -55,13 +56,19 @@ export class Linterhub {
 
     /**
      * Set proxy for installing Linterhub
-     * @param proxy String like [protocol]://[username]:[pass]@[address]:[port]
+     * @param {string} proxy String like [protocol]://[username]:[pass]@[address]:[port]
      */
     public static setProxy(proxy: string): void {
         this.proxy = proxy;
     }
 
-    public static initializeLinterhub(integration: any, settings: LinterhubTypes.Settings): void {
+
+    /**
+     * Initialize Linterhub for current project
+     * @param {LinterhubTypes.Integration} integration - Object of class that implements specific methods like convertation of errors etc.
+     * @param {LinterhubTypes.Settings} settings Instance of Linterhub Settings
+     */
+    public static initializeLinterhub(integration: LinterhubTypes.Integration, settings: LinterhubTypes.Settings): void {
         this.onReady = new Promise((resolve, reject) => { });
         this.logger = integration.logger;
         this.status = integration.status;
@@ -84,6 +91,9 @@ export class Linterhub {
         }
     }
 
+    /**
+     * Install Linterhub Cli (REMEMBER: This method is public only for testing, it should be called only in Linterhub Class)
+     */
     public static install(): Promise<String> {
         this.status.update({ id: this.systemId }, true, "Start install process..");
 
@@ -110,9 +120,9 @@ export class Linterhub {
 
     /**
      * Analyze project.
-     *
+     * @returns {any} Data with problems, converted to specific for ide format
      */
-    public static analyze(): Promise<any> {
+    public static analyze(): Promise<string> {
         this.onReady = this.onReady
             .then(() => { this.logger.info(`Analyze project.`); })
             .then(() => { this.status.update({ id: this.project }, true, "Analyzing project..."); })
@@ -130,9 +140,10 @@ export class Linterhub {
     /**
      * Analyze single file.
      *
-     * @param path The relative path to file.
-     * @param run The run mode (when).
-     * @param document The active document.
+     * @param {string} path The relative path to file.
+     * @param {LinterhubTypes.Run} run Run mode.
+     * @param {any} document The active document.
+     * @returns {any} Data with problems, converted to specific for ide format
      */
     public static analyzeFile(path: string, run: LinterhubTypes.Run = LinterhubTypes.Run.none, document: any = null): Promise<any> {
         if (this.settings.linterhub.run.indexOf(run) < 0 && run !== LinterhubTypes.Run.force) {
@@ -165,7 +176,7 @@ export class Linterhub {
 
     /**
      * Get linters catalog.
-     *
+     * @returns {LinterhubTypes.LinterResult[]} Array of linters, available in Linterhub Cli
      */
     public static catalog(): Promise<LinterhubTypes.LinterResult[]> {
         this.onReady = this.onReady
@@ -190,6 +201,7 @@ export class Linterhub {
      * Activate linter.
      *
      * @param name The linter name.
+     * @returns {string} Must return linter name (for validation)
      */
     public static activate(name: string): Promise<string> {
         this.onReady = this.onReady
