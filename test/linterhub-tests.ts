@@ -50,7 +50,8 @@ describe('Linterhub class', function () {
         project: "project",
         linterhub_version: "version",
         sendDiagnostics: function () { },
-        normalizePath: function () { }
+        normalizePath: function () { },
+        saveConfig: function () {}
     };
 
     let settings = {

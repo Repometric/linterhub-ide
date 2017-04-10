@@ -30,8 +30,6 @@ export class Linterhub {
         let promise = new Promise((resolve, reject) => {
             // TODO: Use spawn and buffers.
             cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
-                console.log("Execute: " + command);
-                console.log(stdout);
                 let execError = stderr.toString();
                 if (error) {
                     reject(new Error(error.message));
