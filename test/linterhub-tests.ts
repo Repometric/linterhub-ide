@@ -158,7 +158,7 @@ describe('Linterhub class', function () {
             return Linterhub.ignoreWarning(params).then(function (x) {
                 assert.equal(calls_number + 1, executeStub.callCount, "calls number is not correct");
                 calls_number++;
-                assert.equal(x, "dotnet cli-path\\cli.dll --mode=ignore --project=project --error=error --file=file --line=1");
+                assert.equal(x, "dotnet " + path.join("cli-path", "cli.dll") + " --mode=ignore --project=project --error=error --file=file --line=1");
             });
         });
     });
