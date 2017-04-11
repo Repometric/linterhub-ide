@@ -1,10 +1,9 @@
 /// <reference path="../typings/globals/mocha/index.d.ts"/>
-
-import assert = require("assert");
-var sinon = require('sinon');
+import * as assert from 'assert';
+import { stub, assert as sinonAssert } from 'sinon';
 
 var fs = require("fs");
-sinon.stub(fs, "existsSync", function () {
+stub(fs, "existsSync").callsFake(function () {
     return true;
 });
 
@@ -17,7 +16,7 @@ import { PlatformInformation } from '../src/platform';
 
 import * as path from 'path';
 
-var executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+var executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
     return new Promise((resolve, reject) => {
         resolve(command);
     });
@@ -119,12 +118,12 @@ describe('Linterhub class', function () {
             return Linterhub.linterVersion("linter", false).then(function (x) {
                 assert.equal(calls_number + 1, executeStub.callCount, "calls number is not correct");
                 calls_number++;
-                sinon.assert.calledWith(executeStub, args.linterVersion("linter", false));
+                sinonAssert.calledWith(executeStub, args.linterVersion("linter", false));
             });
         });
         it('result check', function () {
             executeStub.restore();
-            executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+            executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                 return new Promise((resolve, reject) => {
                     resolve("{\"LinterName\":\"" + "linter" + "\",\"Installed\":true,\"Version\":\"v1.0.4\"}");
                 });
@@ -138,7 +137,7 @@ describe('Linterhub class', function () {
                 assert.equal(JSON.stringify(x), JSON.stringify(result));
             }).then(function(){
                 executeStub.restore();
-                executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+                executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                     return new Promise((resolve, reject) => {
                         resolve(command);
                     });
@@ -178,7 +177,7 @@ describe('Linterhub class', function () {
 
         it('result check', function () {
             executeStub.restore();
-            executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+            executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                 return new Promise((resolve, reject) => {
                     resolve(data);
                 });
@@ -187,7 +186,7 @@ describe('Linterhub class', function () {
                 assert.equal(JSON.stringify(x), data);
             }).then(function(){
                 executeStub.restore();
-                executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+                executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                     return new Promise((resolve, reject) => {
                         resolve(command);
                     });
@@ -197,7 +196,7 @@ describe('Linterhub class', function () {
         });
     });
 
-    var spy_diagnostics = sinon.stub(api, "sendDiagnostics", function (data: string): any {
+    var spy_diagnostics = stub(api, "sendDiagnostics").callsFake(function (data: string): any {
         return JSON.parse(data);
     });
 
@@ -212,7 +211,7 @@ describe('Linterhub class', function () {
 
         it('result check', function () {
             executeStub.restore();
-            executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+            executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                 return new Promise((resolve, reject) => {
                     resolve(JSON.stringify(data));
                 });
@@ -221,7 +220,7 @@ describe('Linterhub class', function () {
                 assert.equal(JSON.stringify(x), JSON.stringify(data));
             }).then(function(){
                 executeStub.restore();
-                executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
+                executeStub = stub(Linterhub, "executeChildProcess").callsFake(function (command: string, workingDirectory: string = "default"): Promise<string> {
                     return new Promise((resolve, reject) => {
                         resolve(command);
                     });
@@ -232,7 +231,7 @@ describe('Linterhub class', function () {
     });
 
     describe('install method', function () {
-        var install_stub = sinon.stub(LinterhubInstaller, "run",
+        var install_stub = stub(LinterhubInstaller, "run").callsFake(
             function (mode: LinterhubTypes.Mode, folder: string, proxy: string,
                     strictSSL: boolean, log: LinterhubTypes.LoggerInterface,
                     status: LinterhubTypes.StatusInterface, version: string): Promise<string> {
@@ -243,7 +242,7 @@ describe('Linterhub class', function () {
         );
 
         let gdv_success: boolean = true;
-        var getDotnetVersion_stub = sinon.stub(LinterhubInstaller, "getDotnetVersion",
+        var getDotnetVersion_stub = stub(LinterhubInstaller, "getDotnetVersion").callsFake(
             function (): Promise<string> {
                 return new Promise((resolve, reject) => {
                     if (gdv_success) {
@@ -290,9 +289,11 @@ describe('Linterhub class', function () {
 
     describe('analyzeFile method', function () {
         var data = JSON.parse("[{\"Name\":\"jshint\",\"Model\":{\"Files\":[{\"Path\":\"file\",\"Errors\":[{\"Message\":\"description\",\"Rule\":{\"Name\":\"test_name\",\"Id\":null,\"Namespace\":null},\"Severity\":1,\"Evidence\":null,\"Line\":0,\"Column\":{\"Start\":5,\"End\":5},\"Row\":{\"Start\":4,\"End\":4}}]}],\"ParseErrors\":{\"ErrorMessage\":null,\"Input\":null}}}]");
-        var spy_normalize = sinon.stub(api, "normalizePath", function (file: string): string {
-            return file;
-        });
+        var spy_normalize = stub(api, "normalizePath").callsFake(
+            function (file: string): string {
+                return file;
+            }
+        );
         it('return null on wrong Run mode', function () {
             assert.equal(Linterhub.analyzeFile("path", LinterhubTypes.Run.none), null);
         });
@@ -309,20 +310,24 @@ describe('Linterhub class', function () {
 
         it('result check', function () {
             executeStub.restore();
-            executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
-                return new Promise((resolve, reject) => {
-                    resolve(JSON.stringify(data));
-                });
-            });
+            executeStub = stub(Linterhub, "executeChildProcess").callsFake(
+                function (command: string, workingDirectory: string = "default"): Promise<string> {
+                    return new Promise((resolve, reject) => {
+                        resolve(JSON.stringify(data));
+                    });
+                }
+            );
             return Linterhub.analyzeFile("path", LinterhubTypes.Run.onOpen).then(function (x) {
                 assert.equal(JSON.stringify(x), JSON.stringify(data));
             }).then(function(){
                 executeStub.restore();
-                executeStub = sinon.stub(Linterhub, "executeChildProcess", function (command: string, workingDirectory: string = "default"): Promise<string> {
-                    return new Promise((resolve, reject) => {
-                        resolve(command);
-                    });
-                });
+                executeStub = stub(Linterhub, "executeChildProcess").callsFake(
+                    function (command: string, workingDirectory: string = "default"): Promise<string> {
+                        return new Promise((resolve, reject) => {
+                            resolve(command);
+                        });
+                    }
+                );
                 return null;
             });
         });
