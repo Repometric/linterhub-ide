@@ -25,10 +25,15 @@ export class Linterhub {
      * @param {string} workingDirectory Working directory of process
      * @returns {Promise<string>} Returns stdout
      */
-    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliPath): Promise<string> {
+    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliPath, scope: string = this.systemId): Promise<string> {
+        if(workingDirectory === "")
+        {
+            workingDirectory = this.settings.linterhub.cliPath;
+        }
         // TODO: Return ChildProcess in order to stop it when needed
         let promise = new Promise((resolve, reject) => {
             // TODO: Use spawn and buffers.
+            Linterhub.status.update(scope, true);
             cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
                 let execError = stderr.toString();
                 if (error) {
@@ -38,6 +43,7 @@ export class Linterhub {
                 } else {
                     resolve(stdout);
                 }
+                Linterhub.status.update(scope, false);
             });
         });
 
@@ -67,44 +73,46 @@ export class Linterhub {
      * @param {LinterhubTypes.Settings} settings Instance of Linterhub Settings
      */
     public static initializeLinterhub(integration: LinterhubTypes.Integration, settings: LinterhubTypes.Settings): void {
-        this.onReady = new Promise((resolve, reject) => { });
-        this.logger = integration.logger;
-        this.status = integration.status;
-        this.project = integration.project;
-        this.integration = integration;
-        this.settings = settings;
-        if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
-            this.install()
-                .catch((error) => this.settings.linterhub.enable = false)
-                .then(() => {
-                    this.integration.saveConfig(this.settings)
-                    this.settings.linterhub.enable = true;
-                    this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
-                    this.onReady = this.executeChildProcess(this.args.version());
-                });
-        }
-        else {
-            this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
-            this.onReady = this.executeChildProcess(this.args.version());
-        }
+        this.onReady = new Promise((resolve, reject) => {
+            this.logger = integration.logger;
+            this.status = integration.status;
+            this.project = integration.project;
+            this.integration = integration;
+            this.settings = settings;
+            if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
+                this.install()
+                    .catch((error) => {
+                        this.settings.linterhub.enable = false;
+                        reject();
+                    })
+                    .then((data) => {
+                        this.logger.info(JSON.stringify(this.settings));
+                        this.integration.saveConfig(this.settings)
+                        this.settings.linterhub.enable = true;
+                        this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+                        resolve();
+                    })
+            }
+            else {
+                this.logger.info(JSON.stringify(this.settings));
+                this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
+                resolve();
+            }
+        });
     }
 
     /**
      * Install Linterhub Cli (REMEMBER: This method is public only for testing, it should be called only in Linterhub Class)
      */
     public static install(): Promise<String> {
-        this.status.update({ id: this.systemId }, true, "Start install process..");
-
         return LinterhubInstaller.getDotnetVersion()
             .then(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.dotnet; })
             .catch(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.native; })
             .then(() => { this.logger.info(`Start download.`); })
             .then(() => {
-
-                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.status, this.linterhub_version, this.proxy)
+                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.linterhub_version, this.proxy)
                     .then((data) => {
                         this.logger.info(`Finish download.`);
-                        this.status.update({ id: this.systemId }, false, "Active");
                         this.settings.linterhub.cliPath = data;
                         return data;
                     })
@@ -123,12 +131,10 @@ export class Linterhub {
     public static analyze(): Promise<string> {
         this.onReady = this.onReady
             .then(() => { this.logger.info(`Analyze project.`); })
-            .then(() => { this.status.update({ id: this.project }, true, "Analyzing project..."); })
-            .then(() => this.executeChildProcess(this.args.analyze()))
+            .then(() => this.executeChildProcess(this.args.analyze(), "", this.project))
             .then((data: string) => { return this.integration.sendDiagnostics(data); })
             .catch((reason) => { this.logger.error(`Error analyze project '${reason}'.`); })
             .then((data) => {
-                this.status.update({ id: this.project }, false, "Active");
                 this.logger.info(`Finish analyze project.`);
                 return data;
             });
@@ -158,14 +164,12 @@ export class Linterhub {
 
         this.onReady = this.onReady
             .then(() => this.logger.info(`Analyze file '${path}'.`))
-            .then(() => this.status.update({ id: path }, true, "Analyzing file " + relative_path ))
-            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(relative_path))))
+            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(relative_path)), "", path))
             .then((data: string) => {
                 return this.integration.sendDiagnostics(data, document);
             })
             .catch((reason) => { this.logger.error(`Error analyze file ` + reason); })
             .then((data) => {
-                this.status.update({ id: path }, false, "Active");
                 this.logger.info(`Finish analyze file '${path}'.`);
                 return data;
             });
@@ -178,7 +182,6 @@ export class Linterhub {
      */
     public static catalog(): Promise<LinterhubTypes.LinterResult[]> {
         this.onReady = this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true, "Getting linters catalog.."))
             .then(() => this.executeChildProcess(this.args.catalog()))
             .then((data: string) => {
                 let json: any = JSON.parse(data);
@@ -190,7 +193,6 @@ export class Linterhub {
                 return [];
             })
             .then((result) => {
-                this.status.update({ id: this.systemId }, false, "Active");
                 return result;
             });
         return this.onReady;
@@ -203,9 +205,7 @@ export class Linterhub {
      */
     public static activate(name: string): Promise<string> {
         this.onReady = this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true, "Activating " + name + "..."))
             .then(() => this.executeChildProcess(this.args.activate(name)))
-            .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
         return this.onReady;
     }
@@ -234,7 +234,6 @@ export class Linterhub {
      */
     public static linterVersion(name: string, install: boolean): Promise<LinterhubTypes.LinterVersionResult> {
         this.onReady = this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true))
             .then(() => this.executeChildProcess(this.args.linterVersion(name, install)))
             .then((data: string) => {
                 let json: LinterhubTypes.LinterVersionResult = JSON.parse(data);
@@ -245,10 +244,6 @@ export class Linterhub {
                 this.logger.error(`Error while requesting linter version '${reason}'.`);
                 return null;
             })
-            .then((result) => {
-                this.status.update({ id: this.systemId }, false);
-                return result;
-            });
         return this.onReady;
     }
 
@@ -259,9 +254,7 @@ export class Linterhub {
      */
     public static deactivate(name: string): Promise<string> {
         this.onReady = this.onReady
-            .then(() => this.status.update({ id: this.systemId }, true, "Deactivating " + name + "..."))
             .then(() => this.executeChildProcess(this.args.deactivate(name)))
-            .then(() => this.status.update({ id: this.systemId }, false, "Active"))
             .then(() => name);
         return this.onReady;
     }

@@ -93,7 +93,7 @@ export namespace LinterhubInstaller {
       * @param {string} proxy Proxy to use
       * @returns {Promise<string>} Path to Cli
       */
-    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, status: LinterhubTypes.StatusInterface, version: string, proxy: string): Promise<string> {
+    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, version: string, proxy: string): Promise<string> {
         // TODO
         if (mode === LinterhubTypes.Mode.docker) {
             return downloadDock("repometric/linterhub-cli");
@@ -110,7 +110,7 @@ export namespace LinterhubInstaller {
                         }), {})
                         .on('progress', state => {
                             var percent = Math.round(state.percent * 10000) / 100;
-                            status.update(null, true, 'Downloading.. (' + percent + "%)");
+                            log.info('Downloading.. (' + percent + "%)");
                         })
                         .on('error', err => log.error(err))
                         .on('response', function(res){
@@ -118,8 +118,11 @@ export namespace LinterhubInstaller {
                         })
                         .on('end', () => {
                             log.info("Unzipping " + folder);
-                            fs.createReadStream(helper.getPackageFullFileName()).pipe(unzip.Extract({ path: folder }));
-                            resolve(path.resolve(folder, 'bin', helper.getPackageName()));
+                            fs.createReadStream(helper.getPackageFullFileName())
+                                .pipe(unzip.Extract({ path: folder }))
+                                .on('close', function () {
+                                    resolve(path.resolve(folder, 'bin', helper.getPackageName()))
+                                });
                         })
                 });
             });

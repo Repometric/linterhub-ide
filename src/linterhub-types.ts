@@ -101,11 +101,12 @@ export namespace LinterhubTypes {
 	 */
 	export interface StatusInterface {
 		/**
-		 * Updates status string
+		 * Updates status 
 		 * @method update
-		 * @param {string} text New status
+		 * @param {string} id Id of tab (path)
+		 * @param {boolean} progress Active or not
 		 */
-		update(params: any, progress?: boolean, text?: string): void;
+		update(id: string, progress: boolean): void;
 	}
 
 	export interface Settings {
