@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/binore/linterhub-ide.svg?branch=travis_test)](https://travis-ci.org/binore/linterhub-ide)
+[![Build Status](https://travis-ci.org/Repometric/linterhub-ide.svg?branch=master)](https://travis-ci.org/Repometric/linterhub-ide)
 
 Linterhub IDE Package
 =====
