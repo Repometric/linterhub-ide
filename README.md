@@ -1,14 +1,17 @@
-[![Build Status](https://travis-ci.org/Repometric/linterhub-ide.svg?branch=master)](https://travis-ci.org/Repometric/linterhub-ide)
-
 Linterhub IDE Package
 =====
-Small package with shared classes for linterhub extensions:
-* [Linterhub Atom Extension](https://github.com/Repometric/linterhub-atom)
-* [Linterhub VSCode Extension](https://github.com/Repometric/linterhub-vscode)
-* [Linterhub Brackets Extension](https://github.com/Repometric/linterhub-brackets)
+[![Build Status](https://travis-ci.org/repometric/linterhub-ide.svg?branch=master)](https://travis-ci.org/repometric/linterhub-ide)
 
-To install this package type `npm install linterhub-ide`
+npm package with shared classes for js-based linterhub extensions:
+* [linterhub Atom Extension](https://github.com/repometric/linterhub-atom)
+* [linterhub VSCode Extension](https://github.com/repometric/linterhub-vscode)
+* [linterhub Brackets Extension](https://github.com/repometric/linterhub-brackets)
+
+To install this package type `npm install @repometric/linterhub-ide`
 
 ## How to test
-* First of all, u need to install `mocha` globally.
-* Then press `Ctrl + Shift + P` and run `Tasks: Run Test Task` task.
+* Type `npm run check`, it will:
+    * Update all dependencies;
+    * Build TypeScript code;
+    * Run all tests;
+    * Lint source code.
