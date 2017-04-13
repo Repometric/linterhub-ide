@@ -1,6 +1,6 @@
 {
   "name": "@repometric/linterhub-ide",
-  "version": "0.4.17",
+  "version": "0.4.18",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
@@ -15,7 +15,7 @@
     "build": "tsc -p .",
     "test": "mocha dist/test/*.js -R spec -C",
     "lint": "tslint -c tslint.json src/**/*.ts && tslint -c tslint.json test/**/*.ts",
-    "pub": "npm version patch && npm publish --access public"
+    "pub": "npm publish --access public"
   },
   "author": "Oleg Safonov <by.xsofa@gmail.com>",
   "license": "MIT",
@@ -33,11 +33,11 @@
     "os": "^0.1.1",
     "path": "^0.12.7",
     "process": "^0.11.9",
-    "url": "^0.11.0",
-    "yauzl": "^2.7.0",
-    "request-progress": "^3.0.0",
     "request": "^2.81.0",
-    "unzip": "^0.1.11"
+    "request-progress": "^3.0.0",
+    "unzip": "^0.1.11",
+    "url": "^0.11.0",
+    "yauzl": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.5",
