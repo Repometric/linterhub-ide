@@ -43,4 +43,3 @@ class LoggerMock {
     error(string: string) { }
     warn(string: string) { }
 }
-

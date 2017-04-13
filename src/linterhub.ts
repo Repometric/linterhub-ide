@@ -70,7 +70,6 @@ export class Linterhub {
         this.proxy = proxy;
     }
 
-
     /**
      * Initialize Linterhub for current project
      * @param {LinterhubTypes.Integration} integration - Object of class that implements specific methods like convertation of errors etc.
