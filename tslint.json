@@ -8,6 +8,18 @@
 		"curly": true,
 		"class-name": true,
 		"semicolon": ["always"],
-		"triple-equals": true
+		"triple-equals": true,
+        "completed-docs": [true, {
+			"classes": {
+				"visibilities": ["exported"]
+			},
+			"functions": {
+				"visibilities": ["exported"]
+			},
+			"methods": {
+				"locations": ["instance"],
+				"privacies": ["public", "protected"]
+			}
+		}]
 	}
 }

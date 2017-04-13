@@ -14,7 +14,7 @@
     "init": "npm install",
     "build": "tsc -p .",
     "test": "mocha dist/test/*.js -R spec -C",
-    "lint": "tslint -c tslint.json src/**/*.ts && tslint -c tslint.json test/**/*.ts",
+    "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts --exclude **/platform.ts **/*.ts",
     "pub": "npm publish --access public"
   },
   "author": "Oleg Safonov <by.xsofa@gmail.com>",

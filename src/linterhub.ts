@@ -4,6 +4,10 @@ import { LinterhubArgs } from './linterhub-args';
 import * as fs from 'fs';
 import * as cp from 'child_process';
 
+/**
+  * Represets wrapper for Linterhub cli
+  * @class Linterhub
+  */
 export class Linterhub {
     private static systemId: string = "_system";
     private static linterhub_version: string = "0.3.4";

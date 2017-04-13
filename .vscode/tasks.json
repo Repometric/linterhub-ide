@@ -4,19 +4,19 @@
     "version": "0.1.0",
     "tasks": [
         {
-            "taskName": "tsc",
-            "command": "tsc",
+            "taskName": "Build",
+            "command": "npm",
             "isShellCommand": true,
-            "args": ["-p", "."],
+            "args": ["run", "build"],
             "showOutput": "always",
             "problemMatcher": "$tsc",
             "isBuildCommand": true
         },
         {
-            "taskName": "test",
-            "command": "mocha",
+            "taskName": "Test",
+            "command": "npm",
             "isTestCommand": true,
-            "args": ["dist/test/*.js", "-R", "spec", "-C"],
+            "args": ["run", "test"],
             "isShellCommand": true,
             "showOutput": "always"
         }
