@@ -121,9 +121,9 @@ export namespace LinterhubInstaller {
                             fs.createReadStream(helper.getPackageFullFileName())
                                 .pipe(unzip.Extract({ path: folder }))
                                 .on('close', function () {
-                                    resolve(path.resolve(folder, 'bin', helper.getPackageName()))
+                                    resolve(path.resolve(folder, 'bin', helper.getPackageName()));
                                 });
-                        })
+                        });
                 });
             });
         }

@@ -13,7 +13,7 @@ export class Linterhub {
     private static args: LinterhubArgs;
     private static proxy: string;
 
-    private static onReady: Promise<{}>;
+    private static onReady: Promise<any>;
 
     private static settings: LinterhubTypes.Settings;
     private static integration: LinterhubTypes.Integration;
@@ -87,11 +87,11 @@ export class Linterhub {
                     })
                     .then((data) => {
                         this.logger.info(JSON.stringify(this.settings));
-                        this.integration.saveConfig(this.settings)
+                        this.integration.saveConfig(this.settings);
                         this.settings.linterhub.enable = true;
                         this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
                         resolve();
-                    })
+                    });
             }
             else {
                 this.logger.info(JSON.stringify(this.settings));
@@ -243,7 +243,7 @@ export class Linterhub {
             .catch((reason) => {
                 this.logger.error(`Error while requesting linter version '${reason}'.`);
                 return null;
-            })
+            });
         return this.onReady;
     }
 

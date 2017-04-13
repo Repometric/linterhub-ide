@@ -3,18 +3,18 @@
         "target": "es5",
         "module": "commonjs",
         "moduleResolution": "node",
-        "lib": [ "es6" ],
+        "lib": [  "es6" ],
         "removeComments": true,
         "preserveConstEnums": true,
         "declaration": true,
         "suppressImplicitAnyIndexErrors": true,
-        "outDir": "js",
+        "outDir": "dist",
         "typeRoots": [
             "./node_modules/@types"
         ]
     },
     "exclude": [
-        "node_modues",
-        "js"
+        "node_modules",
+        "dist"
     ]
 }

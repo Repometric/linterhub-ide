@@ -1,11 +1,21 @@
 {
-  "name": "linterhub-ide",
-  "version": "0.4.13",
+  "name": "@repometric/linterhub-ide",
+  "version": "0.4.16",
   "description": "Small package with shared classes for all linterhub extensions",
-  "main": "js/src/index.js",
-  "typings": "js/src/index.d.ts",
+  "main": "dist/src/index.js",
+  "typings": "dist/src/index.d.ts",
+  "directories": {
+    "lib": "dist/src"
+  },
+  "files": [
+    "dist/src"
+  ],
   "scripts": {
-    "test": "mocha js/test/*.js -R spec -C"
+    "init": "npm install",
+    "build": "tsc -p .",
+    "test": "mocha dist/test/*.js -R spec -C",
+    "lint": "tslint -c tslint.json src/**/*.ts && tslint -c tslint.json test/**/*.ts",
+    "pub": "npm version patch && npm publish --access public"
   },
   "author": "Oleg Safonov <by.xsofa@gmail.com>",
   "license": "MIT",
@@ -20,17 +30,22 @@
     "https": "^1.0.0",
     "https-proxy-agent": "^1.0.0",
     "mkdirp": "^0.5.1",
-    "mocha": "^3.2.0",
-    "assert": "^1.4.1",
     "os": "^0.1.1",
     "path": "^0.12.7",
     "process": "^0.11.9",
     "url": "^0.11.0",
     "yauzl": "^2.7.0",
-    "sinon": "^2.1.0",
-    "@types/node": "^7.0.5",
     "request-progress": "^3.0.0",
     "request": "^2.81.0",
     "unzip": "^0.1.11"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.5",
+    "assert": "^1.4.1",
+    "mocha": "^3.2.0",
+    "sinon": "^2.1.0",
+    "tslint": "^5.1.0",
+    "tslint-eslint-rules": "^4.0.0",
+    "typescript": "^2.3.0"
   }
 }
