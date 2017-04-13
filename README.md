@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/binore/linterhub-ide.svg?branch=travis_test)](https://travis-ci.org/binore/linterhub-ide)
+
 Linterhub IDE Package
 =====
 Small package with shared classes for linterhub extensions:

@@ -1,17 +1,14 @@
-import * as fs from 'fs';
-import * as https from 'https';
 import * as path from 'path';
-import { parse as parseUrl } from 'url';
-import { Proxy } from './proxy';
 import { PlatformInformation } from './platform';
-import { executeChildProcess } from './util';
-import { LinterhubMode } from './linterhub-cli';
-import { LoggerInterface, StatusInterface } from './integration';
-import { mkdirp } from 'mkdirp';
-import * as yauzl from 'yauzl';
+import { Linterhub } from './linterhub';
+import { LinterhubTypes } from './linterhub-types';
+var fs = require('fs');
+var request = require('request');
+var progress = require('request-progress');
+var unzip = require('unzip');
 
 /**
-  * Class that provide information for downloading, installing and activating Linterhub
+  * Class that provide information for downloading, installing and activating of Linterhub
   * @class LinterhubPackage
   */
 export class LinterhubPackage {
@@ -26,9 +23,17 @@ export class LinterhubPackage {
         this.folder = folder;
         this.version = version;
     }
+
+    /**
+     * Returns package version
+     */
     getPackageVersion(): string {
         return this.version;
     }
+
+    /**
+     * Returns package name (based on system name and availability of dotnet)
+     */
     getPackageName(): string {
         if (!this.native) {
             return "dotnet";
@@ -45,184 +50,83 @@ export class LinterhubPackage {
         }
         return "unknown";
     }
+
+    /**
+     * Full package name
+     */
     getPackageFullName(): string {
         return "linterhub-cli-" + this.getPackageName();
     }
+
+    /**
+     * Package file name
+     */
     getPackageFileName(): string {
         return this.getPackageFullName() + ".zip";
     }
+
+    /**
+     * Full path to package file
+     */
     getPackageFullFileName(): string {
         return path.join(this.folder, this.getPackageFileName());
     }
+
+    /**
+     * Url for downloading package (on github)
+     */
     getPackageUrl(): string {
         return this.prefix + this.version + "/" + this.getPackageFileName();
     }
 }
 
-/**
-  * Class for downloading Linterhub
-  * @class LinterhubPackage
-  */
-export class NetworkHelper {
-    buildRequestOptions(urlString: any, proxy: string, strictSSL: boolean): https.RequestOptions {
-        const url = parseUrl(urlString);
-        const options: https.RequestOptions = {
-            host: url.host,
-            path: url.path,
-            agent: Proxy.getProxyAgent(url, proxy, strictSSL),
-            rejectUnauthorized: strictSSL
-        };
-        return options;
-    }
-
-    downloadContent(urlString: any, proxy: string, strictSSL: boolean): Promise<string> {
-        const options = this.buildRequestOptions(urlString, proxy, strictSSL);
-        return new Promise<string>((resolve, reject) => {
-            https.get(options, function (response) {
-                var body = '';
-                response.on('data', (chunk) => body + chunk);
-                response.on('end', () => resolve(body));
-                response.on('error', (err) => reject(new Error(err.message)));
-            });
-        });
-    }
-
-    downloadFile(urlString: string, pathx: string, proxy: string, strictSSL: boolean, status: any): Promise<string> {
-        const options = this.buildRequestOptions(urlString, proxy, strictSSL);
-        return new Promise<string>((resolve, reject) => {
-            let request = https.request(options, response => {
-                if (response.statusCode === 301 || response.statusCode === 302) {
-                    // Redirect - download from new location
-                    return resolve(this.downloadFile(response.headers.location, pathx, proxy, strictSSL, status));
-                }
-
-                if (response.statusCode !== 200) {
-                    return reject(new Error(response.statusCode.toString()));
-                }
-
-                // Downloading - hook up events
-                let packageSize = parseInt(response.headers['content-length'], 10);
-                let downloadedBytes = 0;
-                let downloadPercentage = 0;
-                let tmpFile = fs.createWriteStream(pathx);
-
-                response.on('data', data => {
-                    downloadedBytes += data.length;
-
-                    // Update status bar item with percentage
-                    let newPercentage = Math.ceil(100 * (downloadedBytes / packageSize));
-                    if (newPercentage !== downloadPercentage) {
-                        downloadPercentage = newPercentage;
-                        status.update(null, true, 'Downloading.. (' + newPercentage + "%)");
-                    }
-                });
-
-                response.on('end', () => resolve());
-                response.on('error', err => reject(new Error(err.message)));
-                // Begin piping data from the response to the package file
-                response.pipe(tmpFile, { end: false });
-            });
-
-            request.on('error', error => {
-                reject(new Error(error.message));
-            });
-
-            // Execute the request
-            request.end();
-        });
-    }
-}
-
-export namespace LinterhubInstallation {
+export namespace LinterhubInstaller {
 
     /**
       * Function that installs Linterhub
       * @function install
       * @param {LinterhubMode} mode Describes how to run Cli
       * @param {string} folder Folder to install Linterhub
-      * @param {string} proxy
-      * @param {boolean} strictSSL
       * @param {LoggerInterface} log Object that will be used for logging
       * @param {StatusInterface} status Object that will be used for changing status
       * @param {string} version What version of Linterhub Cli to install
+      * @param {string} proxy Proxy to use
       * @returns {Promise<string>} Path to Cli
       */
-    export function install(mode: LinterhubMode, folder: string, proxy: string, strictSSL: boolean, log: LoggerInterface, status: StatusInterface, version: string): Promise<string> {
+    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, version: string, proxy: string): Promise<string> {
         // TODO
-        if (mode === LinterhubMode.docker) {
+        if (mode === LinterhubTypes.Mode.docker) {
             return downloadDock("repometric/linterhub-cli");
         } else {
-            return PlatformInformation.GetCurrent().then(info => {
-                log.info("Platform: " + info.toString());
-                let helper = new LinterhubPackage(info, folder, mode === LinterhubMode.native, version);
-                let name = helper.getPackageFullName();
-                log.info("Name: " + name);
-                let networkHelper = new NetworkHelper();
-                return networkHelper.downloadFile(helper.getPackageUrl(), helper.getPackageFullFileName(), proxy, strictSSL, status).then(() => {
-                    log.info("File downloaded");
-                    return installFile(helper.getPackageFullFileName(), folder, log).then(() => {
-                        return path.resolve(folder, 'bin', helper.getPackageName());
-                    });
+            return new Promise((resolve, reject) => {
+                PlatformInformation.GetCurrent().then(info => {
+                    log.info("Platform: " + info.toString());
+                    let helper = new LinterhubPackage(info, folder, mode === LinterhubTypes.Mode.native, version);
+                    let name = helper.getPackageFullName();
+                    log.info("Name: " + name);
+                    progress(request({
+                            url: helper.getPackageUrl(),
+                            proxy: proxy
+                        }), {})
+                        .on('progress', state => {
+                            var percent = Math.round(state.percent * 10000) / 100;
+                            log.info('Downloading.. (' + percent + "%)");
+                        })
+                        .on('error', err => log.error(err))
+                        .on('response', function(res){
+                            res.pipe(fs.createWriteStream(helper.getPackageFullFileName()));
+                        })
+                        .on('end', () => {
+                            log.info("Unzipping " + folder);
+                            fs.createReadStream(helper.getPackageFullFileName())
+                                .pipe(unzip.Extract({ path: folder }))
+                                .on('close', function () {
+                                    resolve(path.resolve(folder, 'bin', helper.getPackageName()))
+                                });
+                        })
                 });
             });
         }
-    }
-
-    function installFile(zipFile: string, folder: any, log: any) {
-        return new Promise<string>((resolve, reject) => {
-
-            yauzl.open(zipFile, { autoClose: true, lazyEntries: true }, (err, zipFile) => {
-                if (err) {
-                    return reject(new Error('Immediate zip file error'));
-                }
-
-                zipFile.readEntry();
-                zipFile.on('entry', (entry: yauzl.Entry) => {
-                    let absoluteEntryPath = path.resolve(/*getBaseInstallPath(pkg)*/
-                        folder, entry.fileName);
-
-                    if (entry.fileName.endsWith('/')) {
-                        // Directory - create it
-                        mkdirp(absoluteEntryPath, { mode: 0o775 }, err => {
-                            if (err) {
-                                return reject(new Error('Error creating directory for zip directory entry:' + err.code || ''));
-                            }
-
-                            zipFile.readEntry();
-                        });
-                    }
-                    else {
-                        // File - extract it
-                        zipFile.openReadStream(entry, (err, readStream) => {
-                            if (err) {
-                                return reject(new Error('Error reading zip stream'));
-                            }
-
-                            mkdirp(path.dirname(absoluteEntryPath), { mode: 0o775 }, err => {
-                                if (err) {
-                                    return reject(new Error('Error creating directory for zip file entry'));
-                                }
-
-                                // Make sure executable files have correct permissions when extracted
-                                let fileMode = true //pkg.binaries && pkg.binaries.indexOf(absoluteEntryPath) !== -1
-                                    ? 0o755
-                                    : 0o664;
-
-                                readStream.pipe(fs.createWriteStream(absoluteEntryPath, { mode: fileMode }));
-                                readStream.on('end', () => zipFile.readEntry());
-                            });
-                        });
-                    }
-                });
-
-                zipFile.on('end', () => resolve(folder));
-                zipFile.on('error', (err: any) => {
-                    log.error(err.toString());
-                    reject(new Error('Zip File Error:' + err.code || ''));
-                });
-            });
-        });
-
     }
 
     /**
@@ -231,7 +135,7 @@ export namespace LinterhubInstallation {
       * @returns {Promise<string>} Stdout of command
       */
     export function getDockerVersion() {
-        return executeChildProcess("docker version --format '{{.Server.Version}}'").then(removeNewLine);
+        return Linterhub.executeChildProcess("docker version --format '{{.Server.Version}}'", null).then(removeNewLine);
     }
 
     /**
@@ -240,7 +144,7 @@ export namespace LinterhubInstallation {
       * @returns {Promise<string>} Stdout of command
       */
     export function getDotnetVersion() {
-        return executeChildProcess('dotnet --version').then(removeNewLine);
+        return Linterhub.executeChildProcess('dotnet --version', null).then(removeNewLine);
     }
 
     function removeNewLine(out: string): string {
@@ -254,6 +158,6 @@ export namespace LinterhubInstallation {
       * @returns {Promise<string>} Stdout of command
       */
     export function downloadDock(name: string): Promise<string> {
-        return executeChildProcess("docker pull " + name);
+        return Linterhub.executeChildProcess("docker pull " + name, null);
     }
 }

@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as os from 'os';
-import * as util from './util';
+import { Linterhub } from './linterhub';
 
 const unknown = 'unknown';
 
@@ -167,7 +167,7 @@ export class PlatformInformation {
     }
 
     private static GetWindowsArchitecture(): Promise<string> {
-        return util.executeChildProcess('wmic os get osarchitecture')
+        return Linterhub.executeChildProcess('wmic os get osarchitecture')
             .then(architecture => {
                 if (architecture) {
                     let archArray: string[] = architecture.split(os.EOL);
@@ -191,7 +191,7 @@ export class PlatformInformation {
     }
 
     private static GetUnixArchitecture(): Promise<string> {
-        return util.executeChildProcess('uname -m')
+        return Linterhub.executeChildProcess('uname -m')
             .then(architecture => {
                 if (architecture) {
                     return architecture.trim();
