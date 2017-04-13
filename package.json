@@ -1,6 +1,6 @@
 {
   "name": "@repometric/linterhub-ide",
-  "version": "0.4.16",
+  "version": "0.4.17",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
