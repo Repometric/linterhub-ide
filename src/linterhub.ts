@@ -225,7 +225,7 @@ export class Linterhub {
             { key: 'mode', value: 'ignore' },
             { key: 'project', value: project },
             { key: 'line', value: line === null ? null : line.toString() },
-            { key: 'ruleId', value: ruleId },
+            { key: 'ruleid', value: ruleId },
             { key: 'file', value: file },
             { key: 'folder', value: folder },
             { key: 'engine', value: engine }

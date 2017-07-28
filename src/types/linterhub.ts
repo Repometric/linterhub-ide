@@ -1,5 +1,7 @@
-export interface Component
-{
+/**
+ * Installation component model
+ */
+export interface Component {
     installed: boolean;
     message: string;
     name: string;
@@ -7,24 +9,38 @@ export interface Component
     packages: Component[];
 }
 
-export interface LinterhubVersion
-{
+/**
+ * Result of linterhub version request
+ */
+export interface LinterhubVersion {
     version: string;
 }
 
-export interface Error
-{
-    id: ErrorId;
-    message: string;
+/**
+ * Error model
+ */
+export interface Error {
+    code: ErrorCode;
+    title: string;
+    description: string;
 }
 
-export enum ErrorId
-{
-    wrongLinter
+/**
+ * Enum of possible error codes
+ */
+export enum ErrorCode {
+    noError,
+    linterhubConfig,
+    missngParams,
+    engineCrashed,
+    engineMissing,
+    pathMissing
 }
 
-export interface Engine
-{
+/**
+ * Engine model
+ */
+export interface Engine {
     name: string;
     description: string;
     url: string;
@@ -39,20 +55,27 @@ export interface Engine
     active: boolean;
 }
 
-export interface EngineResult
-{
+/**
+ * Analyze result model (for one engine)
+ */
+export interface EngineResult {
     engine: string;
     result: AnalyzeResult[];
+    error: Error;
 }
 
-export interface AnalyzeResult
-{
+/**
+ * Analyze result model
+ */
+export interface AnalyzeResult {
     messages: AnalyzeMessage[];
     path: string;
 }
 
-export interface AnalyzeMessage
-{
+/**
+ * Analyze message model
+ */
+export interface AnalyzeMessage {
     message: string;
     description: string;
     severity: string;

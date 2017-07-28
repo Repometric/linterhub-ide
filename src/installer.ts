@@ -13,7 +13,11 @@ import * as unzip from 'unzip';
   * @class Package
   */
 export class Package {
+    /**
+     * Url prefix for CLI releases on github
+     */
     readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
+    
     private version: string;
     private info: PlatformInformation;
     private mode: Mode;
@@ -89,6 +93,9 @@ export class Package {
     }
 }
 
+/**
+ * Provides methods for downloading and installing of CLI
+ */
 export class Installer {
 
     private log: Logger;

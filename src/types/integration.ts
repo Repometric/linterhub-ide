@@ -40,6 +40,9 @@ export interface Logger {
  * @class Status
  */
 export abstract class Status {
+	/**
+	 * Default (global) scope of status event
+	 */
 	public static systemId: string = "_system";
 	/**
 	 * Updates status 
@@ -50,11 +53,17 @@ export abstract class Status {
 	abstract update(id: string, progress: boolean): void;
 }
 
+/**
+ * Contains integration objects (for logging and changing of status)
+ */
 export interface Integration {
 	logger: Logger;
 	status: Status;
 }
 
+/**
+ * Configuration file model (IDE, not CLI)
+ */
 export interface Config {
 	enable: boolean;
 	mode: Mode;

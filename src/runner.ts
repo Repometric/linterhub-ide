@@ -7,11 +7,20 @@ import { Package } from './installer';
 import { PlatformInformation } from './platform';
 import * as fs from 'fs';
 
+/**
+ * Can execute different commands (communicate with CLI for example)
+ */
 export class Runner {
     private static cliPath: string;
     private static mode: Mode;
     private static status: Status;
 
+    /**
+     * Init Runner
+     * @param {string} cliRoot Where to find CLI 
+     * @param {Mode} mode CLI execution mode
+     * @param {Status} status 
+     */
     public static init(cliRoot: string, mode: Mode, status: Status): Promise<string> {
         this.mode = mode;
         this.status = status;
@@ -30,10 +39,12 @@ export class Runner {
     }
 
     /**
-     * Function that execute command (used to communicate with cli)
+     * Invoke any commands
      * @method executeChildProcess
      * @param {string} command Command to execute
-     * @param {string} workingDirectory Working directory of process
+     * @param {string?} workingDirectory Working directory of process
+     * @param {string?} scope Scope for status events
+     * @param {string?} stdin Stdin string
      * @returns {Promise<string>} Returns stdout
      */
     public static execute(command: string, workingDirectory: string = this.cliPath, scope: string = Status.systemId, stdin: string = null): Promise<string> {
@@ -60,6 +71,14 @@ export class Runner {
         });
     }
 
+    /**
+     * Send request to CLI with arguments
+     * @method executeCommand
+     * @param {ArgBuilder} args List of arguments 
+     * @param {string?} scope Scope for status events
+     * @param {string?} stdin Stdin string
+     * @returns {Promise<string>} Returns stdout
+     */
     public static executeCommand(args: ArgBuilder, scope: string, stdin: string = null): Promise<string> {
         return Runner.execute(new CommandBuilder(this.cliPath, this.mode).build(args), this.cliPath, scope, stdin);
     }
@@ -96,6 +115,11 @@ export class CommandBuilder {
         return 'unknown';
     }
 
+    /**
+     * Create full command string
+     * @param {ArgBuilder} args List of arguments
+     * @return {string}
+     */
     public build(args: ArgBuilder): string {
         return this.cli + args.generate();
     }

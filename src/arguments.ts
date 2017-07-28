@@ -1,12 +1,28 @@
+/**
+ * Describes command line argument (simple key-value pair)
+ */
 export class Argument {
+    /**
+     * Name of property
+     */
     public key: string;
+    /**
+     * Value of property
+     */
     public value: string;
 }
 
+/**
+ * Provides methods for generation of execution request
+ */
 export class ArgBuilder {
 
     private args: string[] = [];
     
+    /**
+     * Adds argument
+     * @param {Argument} arg Argument to add 
+     */
     public add(arg: Argument): void
     {
         if (arg.value !== null)
@@ -15,6 +31,10 @@ export class ArgBuilder {
         }
     }
 
+    /**
+     * Adds range of arguments
+     * @param {Argument[]} range Range of arguments to add 
+     */
     public addRange(range: Argument[]): void
     {
         for(let obj in range) {
@@ -22,11 +42,20 @@ export class ArgBuilder {
         }
     }
 
+    /**
+     * Get property value by name
+     * @param {string} key Propery name
+     * @returns {string} Property value
+     */
     public get(key: string): string
     {
         return this.args[key];
     }
 
+    /**
+     * Generate request
+     * @returns {string}
+     */
     public generate(): string
     {
         let result: string[] = [];
