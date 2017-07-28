@@ -1,2 +1,3 @@
 export { Linterhub } from './linterhub';
-export { LinterhubTypes } from './linterhub-types';
+export { Mode, Logger, Status, Integration } from './types/integration';
+export { LinterhubVersion, Component, Error, Engine } from './types/linterhub';
