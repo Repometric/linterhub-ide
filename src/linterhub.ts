@@ -1,65 +1,30 @@
-import { LinterhubTypes } from './linterhub-types';
-import { LinterhubInstaller } from './linterhub-installer';
-import { LinterhubArgs } from './linterhub-args';
+import { Logger, Status, Config, Integration, Mode } from './types/integration';
+import { Installer } from './installer';
+import { ArgBuilder, Argument } from './arguments';
+import { Runner } from './runner';
+import { Component, LinterhubVersion, Engine, AnalyzeResult, EngineResult } from './types/linterhub';
 import * as fs from 'fs';
-import * as cp from 'child_process';
 
 /**
   * Represets wrapper for Linterhub cli
   * @class Linterhub
   */
 export class Linterhub {
-    private static systemId: string = "_system";
-    private static linterhub_version: string = "0.3.4";
+    private static linterhub_version: string = "0.5.2";
+    
     private static project: string;
-    private static logger: LinterhubTypes.LoggerInterface;
-    private static status: LinterhubTypes.StatusInterface;
-    private static args: LinterhubArgs;
-    private static proxy: string;
 
-    private static onReady: Promise<any>;
+    private static config: Config;
+    private static integration: Integration;
 
-    private static settings: LinterhubTypes.Settings;
-    private static integration: LinterhubTypes.Integration;
-
-    /**
-     * Function that execute command (used to communicate with cli)
-     * @method executeChildProcess
-     * @param {string} command Command to execute
-     * @param {string} workingDirectory Working directory of process
-     * @returns {Promise<string>} Returns stdout
-     */
-    public static executeChildProcess(command: string, workingDirectory: string = this.settings.linterhub.cliPath, scope: string = this.systemId): Promise<string> {
-        if(workingDirectory === "")
-        {
-            workingDirectory = this.settings.linterhub.cliPath;
-        }
-        // TODO: Return ChildProcess in order to stop it when needed
-        let promise = new Promise((resolve, reject) => {
-            // TODO: Use spawn and buffers.
-            Linterhub.status.update(scope, true);
-            cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
-                let execError = stderr.toString();
-                if (error) {
-                    reject(new Error(error.message));
-                } else if (execError !== '') {
-                    reject(new Error(execError));
-                } else {
-                    resolve(stdout);
-                }
-                Linterhub.status.update(scope, false);
-            });
-        });
-
-        return promise;
+    private static saveConfig()
+    {
+        fs.writeFileSync('./config.json', JSON.stringify(this.config, null, 2));
     }
 
-    /**
-     * Returns current settings
-     * @returns {LinterhubTypes.Settings} Settings of Linterhub class
-     */
-    public static getSettings(): LinterhubTypes.Settings {
-        return this.settings;
+    private static loadConfig()
+    {
+        this.config = require('../../config.json');
     }
 
     /**
@@ -67,60 +32,63 @@ export class Linterhub {
      * @param {string} proxy String like [protocol]://[username]:[pass]@[address]:[port]
      */
     public static setProxy(proxy: string): void {
-        this.proxy = proxy;
+        this.config.proxy = proxy;
     }
 
     /**
-     * Initialize Linterhub for current project
-     * @param {LinterhubTypes.Integration} integration - Object of class that implements specific methods like convertation of errors etc.
-     * @param {LinterhubTypes.Settings} settings Instance of Linterhub Settings
+     * Initialize Linterhub
+     * @param {Integration} integration
+     * @return {Promise<{}>}
      */
-    public static initializeLinterhub(integration: LinterhubTypes.Integration, settings: LinterhubTypes.Settings): void {
-        this.onReady = new Promise((resolve, reject) => {
-            this.logger = integration.logger;
-            this.status = integration.status;
-            this.project = integration.project;
+    public static initialize(integration: Integration): Promise<{}> {
+        this.loadConfig();
+        return new Promise((resolve, reject) => {
             this.integration = integration;
-            this.settings = settings;
-            if (this.settings.linterhub.cliPath === undefined || this.settings.linterhub.mode === undefined || !fs.existsSync(this.settings.linterhub.cliPath)) {
-                this.install()
-                    .catch((error) => {
-                        this.settings.linterhub.enable = false;
-                        reject();
-                    })
-                    .then((data) => {
-                        this.logger.info(JSON.stringify(this.settings));
-                        this.integration.saveConfig(this.settings);
-                        this.settings.linterhub.enable = true;
-                        this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
-                        resolve();
-                    });
-            }
-            else {
-                this.logger.info(JSON.stringify(this.settings));
-                this.args = new LinterhubArgs(this.settings.linterhub.cliPath, this.project, this.settings.linterhub.mode);
-                resolve();
-            }
+            Runner.init(this.config.cliRoot, this.config.mode, integration.status)
+                .then((cliPath: string) => {
+                    resolve();
+                })
+                .catch(() => {
+                    this.install()
+                        .catch((error) => {
+                            this.config.enable = false;
+                            this.saveConfig();
+                            reject();
+                        })
+                        .then((data: string) => {
+                            console.log("lel");
+                            this.config.enable = true;
+                            this.saveConfig();
+                            Runner.init(this.config.cliRoot, this.config.mode, this.integration.status);
+                            resolve();
+                        });
+                });
         });
     }
 
     /**
-     * Install Linterhub Cli (REMEMBER: This method is public only for testing, it should be called only in Linterhub Class)
+     * Install Linterhub Cli
      */
-    public static install(): Promise<String> {
-        return LinterhubInstaller.getDotnetVersion()
-            .then(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.dotnet; })
-            .catch(() => { this.settings.linterhub.mode = LinterhubTypes.Mode.native; })
-            .then(() => { this.logger.info(`Start download.`); })
+    private static install(): Promise<string> {
+        let installer: Installer = new Installer(this.integration.logger);
+        if(this.config.cliRoot === "")
+        {
+            this.config.cliRoot = __dirname;
+            this.saveConfig();
+        }
+        return installer.getDotnetVersion()
+            .then(() => { this.config.mode = Mode.dotnet; })
+            .catch(() => { this.config.mode = Mode.native; })
+            .then(() => { this.integration.logger.info(`Start download.`); })
             .then(() => {
-                return LinterhubInstaller.run(this.settings.linterhub.mode, this.settings.linterhub.cliRoot, this.logger, this.linterhub_version, this.proxy)
+                return installer.install(this.config.mode, this.config.cliRoot, this.linterhub_version)
                     .then((data) => {
-                        this.logger.info(`Finish download.`);
-                        this.settings.linterhub.cliPath = data;
+                        this.integration.logger.info(`Finish download.`);
+                        this.saveConfig();
                         return data;
                     })
                     .catch((reason) => {
-                        this.logger.error('Error while installing ' + reason + '.');
+                        this.integration.logger.error('Error while installing ' + reason + '.');
                         return "";
                     });
             });
@@ -128,150 +96,225 @@ export class Linterhub {
     }
 
     /**
-     * Analyze project.
-     * @returns {any} Data with problems, converted to specific for ide format
+     * Run analyze
+     * @param {string?} project Project path
+     * @param {string?} folder Folder path/name
+     * @param {string?} file File name
+     * @param {string?} engine Engine (Can be more than one, use comma as delim)
+     * @param {string?} stdin Use it to analyze buffered in memory code
+     * @returns {EngineResult[]}
      */
-    public static analyze(): Promise<string> {
-        this.onReady = this.onReady
-            .then(() => { this.logger.info(`Analyze project.`); })
-            .then(() => this.executeChildProcess(this.args.analyze(), "", this.project))
-            .then((data: string) => { return this.integration.sendDiagnostics(data); })
-            .catch((reason) => { this.logger.error(`Error analyze project '${reason}'.`); })
-            .then((data) => {
-                this.logger.info(`Finish analyze project.`);
-                return data;
-            });
-        return this.onReady;
+    public static analyze(project: string = null, folder: string = null, file: string = null, engine: string = null, stdin: string = null): Promise<EngineResult[]> {
+        let args: ArgBuilder = new ArgBuilder();
+
+        args.addRange([ 
+            { key: 'mode', value: stdin !== null ? 'analyzeStdin' : 'analyze' },
+            { key: 'project', value: project },
+            { key: 'folder', value: folder },
+            { key: 'file', value: file },
+            { key: 'engine', value: engine },
+        ]);
+
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                this.integration.logger.info(`Start analyze.`);
+                Runner.executeCommand(args, Status.systemId, stdin)
+                    .then((result: string) => {
+                        let json: EngineResult[] = JSON.parse(result);
+                        this.integration.logger.info(`Finish analyze.`);
+                        resolve(json);
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Catch error while analyze '${reason}'.`);
+                        reject(reason);
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 
     /**
-     * Analyze single file.
-     *
-     * @param {string} path The relative path to file.
-     * @param {LinterhubTypes.Run} run Run mode.
-     * @param {any} document The active document.
-     * @returns {any} Data with problems, converted to specific for ide format
+     * Get engines catalog.
+     * @param {string?} project Current project (to return activated linters)
+     * @returns {Engine[]} Array of engines, available in Linterhub Cli
      */
-    public static analyzeFile(path: string, run: LinterhubTypes.Run = LinterhubTypes.Run.none, document: any = null): Promise<any> {
-        if (this.settings.linterhub.run.indexOf(run) < 0 && run !== LinterhubTypes.Run.force) {
-            return null;
-        }
+    public static catalog(project: string = null): Promise<Engine[]> {
+        // TODO: use Error type for reject
+        let args: ArgBuilder = new ArgBuilder();
 
-        if (document !== null) {
-            // TODO
-        }
+        args.addRange([
+            { key: 'mode', value: `catalog` },
+            { key: 'project', value: project }
+        ]);
 
-        let relative_path = path.replace('file://', '')
-            .replace(this.project + '/', '')
-            .replace(this.project + '\\', '');
-
-        this.onReady = this.onReady
-            .then(() => this.logger.info(`Analyze file '${path}'.`))
-            .then(() => this.executeChildProcess(this.args.analyzeFile(this.integration.normalizePath(relative_path)), "", path))
-            .then((data: string) => {
-                return this.integration.sendDiagnostics(data, document);
-            })
-            .catch((reason) => { this.logger.error(`Error analyze file ` + reason); })
-            .then((data) => {
-                this.logger.info(`Finish analyze file '${path}'.`);
-                return data;
-            });
-        return this.onReady;
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, Status.systemId)
+                    .then((result: string) => {
+                        let json: Engine[] = JSON.parse(result);
+                        this.integration.logger.info(result);
+                        resolve(json);
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Error while getting catalog '${reason}'.`);
+                        this.integration.logger.error(reason.toString());
+                        reject(reason);
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 
     /**
-     * Get linters catalog.
-     * @returns {LinterhubTypes.LinterResult[]} Array of linters, available in Linterhub Cli
+     * Activate or deactivate engine.
+     * @param {string} project Project path
+     * @param {string} name Engine name
+     * @param {boolean?} activate Activate or deactivate engine for project
      */
-    public static catalog(): Promise<LinterhubTypes.LinterResult[]> {
-        this.onReady = this.onReady
-            .then(() => this.executeChildProcess(this.args.catalog()))
-            .then((data: string) => {
-                let json: any = JSON.parse(data);
-                this.logger.info(data);
-                return json;
-            })
-            .catch((reason) => {
-                this.logger.error(`Error catalog '${reason}'.`);
-                return [];
-            })
-            .then((result) => {
-                return result;
-            });
-        return this.onReady;
-    }
-    /**
-     * Activate linter.
-     *
-     * @param name The linter name.
-     * @returns {string} Must return linter name (for validation)
-     */
-    public static activate(name: string): Promise<string> {
-        this.onReady = this.onReady
-            .then(() => this.executeChildProcess(this.args.activate(name)))
-            .then(() => name);
-        return this.onReady;
+    public static engineConfig(project: string, name: string, activate: boolean = true): Promise<{}> {
+        let args: ArgBuilder = new ArgBuilder();
+
+        args.addRange([
+            { key: 'mode', value: 'activate' },
+            { key: 'project', value: project },
+            { key: 'activate', value: activate ? 'true' : 'false' },
+            { key: 'engine', value: name }
+        ]);
+
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, Status.systemId)
+                    .then((result: string) => {
+                        resolve();
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Error while configuring engine '${reason}'.`);
+                        this.integration.logger.error(reason.toString());
+                        reject(reason);
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 
     /**
-     * Ignore warning.
-     *
-     * @param {IgnoreWarningParams} params Describes warning.
+     * Add ignore rule.
+     * @param {string} project Project path
+     * @param {string?} folder Relative path to folder
+     * @param {string?} file Relative path to file
+     * @param {number?} line Line to ignore
+     * @param {string?} ruleId Rule to ignore
+     * @param {string?} engine Ignore only for this engine
      */
-    public static ignoreWarning(params: LinterhubTypes.IgnoreWarningParams): Promise<string> {
-        this.onReady = this.onReady
-            .then(() => this.executeChildProcess(this.args.ignoreWarning(params)))
-            .catch((reason) => this.logger.error(`Catch error while sending ignore request: '${reason}'.`))
-            .then((result) => {
-                this.logger.info(`Rule added!`);
-                return result;
-            });
-        return this.onReady;
+    public static addIgnoreRule(project: string, folder: string, file: string = null, line: number = null, ruleId: string = null, engine: string = null): Promise<{}> {
+        let args: ArgBuilder = new ArgBuilder();
+
+        args.addRange([
+            { key: 'mode', value: 'ignore' },
+            { key: 'project', value: project },
+            { key: 'line', value: line === null ? null : line.toString() },
+            { key: 'ruleId', value: ruleId },
+            { key: 'file', value: file },
+            { key: 'folder', value: folder },
+            { key: 'engine', value: engine }
+        ]);
+
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, Status.systemId)
+                    .then((result: string) => {
+                        this.integration.logger.info(`Rule added!`);
+                        resolve();
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Error while adding ignore rule '${reason}'.`);
+                        this.integration.logger.error(reason.toString());
+                        reject(reason);
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 
     /**
-     * Get the linter version.
-     *
-     * @param name The linter name.
-     * @param install Install linter or not
+     * Get the engine version.
+     * @method engineVersion
+     * @param {string} name The engine name.
+     * @param {boolean?} install Install engine or not
+     * @return {Promise<EngineVersion>}
      */
-    public static linterVersion(name: string, install: boolean): Promise<LinterhubTypes.LinterVersionResult> {
-        this.onReady = this.onReady
-            .then(() => this.executeChildProcess(this.args.linterVersion(name, install)))
-            .then((data: string) => {
-                let json: LinterhubTypes.LinterVersionResult = JSON.parse(data);
-                this.logger.info(data);
-                return json;
-            })
-            .catch((reason) => {
-                this.logger.error(`Error while requesting linter version '${reason}'.`);
-                return null;
-            });
-        return this.onReady;
+    public static engineVersion(name: string, install: boolean = false): Promise<Component> {
+        let args: ArgBuilder = new ArgBuilder();
+
+        args.addRange([
+            { key: 'mode', value: install ? `engineInstall` : `engineVersion` },
+            { key: 'engine', value: name }
+        ]);
+
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, Status.systemId)
+                    .then((result: string) => {
+                        let json: Component = JSON.parse(result);
+                        resolve(json);
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Error while requesting engine version '${reason}'.`);
+                        this.integration.logger.error(reason.toString());
+                        reject(reason);
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 
     /**
-     * Deactivate linter.
-     *
-     * @param name The linter name.
+     * Get Linterhub CLI version
+     * @method version
+     * @return {Promise<LinterhubVersion>}
      */
-    public static deactivate(name: string): Promise<string> {
-        this.onReady = this.onReady
-            .then(() => this.executeChildProcess(this.args.deactivate(name)))
-            .then(() => name);
-        return this.onReady;
-    }
+    public static version(): Promise<LinterhubVersion> {
+        let args: ArgBuilder = new ArgBuilder();
+        args.add({ key: 'mode', value: `version` });
 
-    /**
-     * Get linterhub and other versions.
-     *
-     */
-    public static version(): Promise<string> {
-        this.onReady = this.onReady
-            .then(() => {
-                return this.executeChildProcess(this.args.version());
-            })
-            .catch((reason) => this.logger.error(reason.toString()));
-        return this.onReady;
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, Status.systemId)
+                    .then((result: string) => {
+                        resolve({
+                            version: result
+                        });
+                    })
+                    .catch((reason) => {
+                        reject(reason);
+                        this.integration.logger.error(reason.toString());
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
     }
 }

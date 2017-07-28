@@ -1,25 +1,34 @@
 import * as path from 'path';
 import { PlatformInformation } from './platform';
 import { Linterhub } from './linterhub';
-import { LinterhubTypes } from './linterhub-types';
-var fs = require('fs');
-var request = require('request');
-var progress = require('request-progress');
-var unzip = require('unzip');
+import { Mode, Logger } from './types/integration';
+import { Runner } from './runner';
+import * as fs from 'fs';
+import * as request from 'request';
+import * as progress from 'request-progress';
+import * as unzip from 'unzip';
 
 /**
   * Class that provide information for downloading, installing and activating of Linterhub
-  * @class LinterhubPackage
+  * @class Package
   */
-export class LinterhubPackage {
+export class Package {
     readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
     private version: string;
     private info: PlatformInformation;
-    private native: boolean;
+    private mode: Mode;
     private folder: string;
-    constructor(info: PlatformInformation, folder: string, native: boolean, version: string) {
+
+    /**
+     * @constructor
+     * @param {PlatformInformation} info Platform Information contains data obut OS version etc
+     * @param {string} folder Folder contains package
+     * @param {Mode} mode Execution mode of CLI
+     * @param {version} version Linterhub CLI version 
+     */
+    constructor(info: PlatformInformation, folder: string, mode: Mode, version: string) {
         this.info = info;
-        this.native = native;
+        this.mode = mode;
         this.folder = folder;
         this.version = version;
     }
@@ -35,7 +44,7 @@ export class LinterhubPackage {
      * Returns package name (based on system name and availability of dotnet)
      */
     getPackageName(): string {
-        if (!this.native) {
+        if (this.mode === Mode.dotnet) {
             return "dotnet";
         }
         // TODO: Improve name conversion
@@ -80,44 +89,58 @@ export class LinterhubPackage {
     }
 }
 
-export namespace LinterhubInstaller {
+export class Installer {
+
+    private log: Logger;
+    private proxy: string;
 
     /**
-      * Function that installs Linterhub
-      * @function install
-      * @param {LinterhubMode} mode Describes how to run Cli
+     * Creates new instance of Linterhub Installer
+     * @param {Logger} log Object that will be used for logging
+     * @param {string} proxy Proxy to use. Null by default
+     */
+    constructor(log: Logger, proxy: string = null) {
+        this.log = log;
+        this.proxy = proxy;
+    }
+
+    /**
+      * Method to install package
+      * @method install
+      * @param {Mode} mode Describes how to run Cli
       * @param {string} folder Folder to install Linterhub
-      * @param {LoggerInterface} log Object that will be used for logging
-      * @param {StatusInterface} status Object that will be used for changing status
       * @param {string} version What version of Linterhub Cli to install
-      * @param {string} proxy Proxy to use
       * @returns {Promise<string>} Path to Cli
       */
-    export function run(mode: LinterhubTypes.Mode, folder: string, log: LinterhubTypes.LoggerInterface, version: string, proxy: string): Promise<string> {
-        // TODO
-        if (mode === LinterhubTypes.Mode.docker) {
-            return downloadDock("repometric/linterhub-cli");
+    public install(mode: Mode, folder: string, version: string): Promise<string> {
+        if (mode === Mode.docker) {
+            // TODO
+            //return downloadDock("repometric/linterhub-cli");
+            return null;
         } else {
             return new Promise((resolve, reject) => {
                 PlatformInformation.GetCurrent().then(info => {
-                    log.info("Platform: " + info.toString());
-                    let helper = new LinterhubPackage(info, folder, mode === LinterhubTypes.Mode.native, version);
+                    this.log.info("Platform: " + info.toString());
+                    let helper = new Package(info, folder, mode, version);
                     let name = helper.getPackageFullName();
-                    log.info("Name: " + name);
+                    this.log.info("Name: " + name);
                     progress(request({
-                            url: helper.getPackageUrl(),
-                            proxy: proxy
-                        }), {})
+                        url: helper.getPackageUrl(),
+                        proxy: this.proxy
+                    }), {})
                         .on('progress', state => {
                             var percent = Math.round(state.percent * 10000) / 100;
-                            log.info('Downloading.. (' + percent + "%)");
+                            this.log.info('Downloading.. (' + percent + "%)");
                         })
-                        .on('error', err => log.error(err))
-                        .on('response', function(res){
+                        .on('error', err => {
+                            this.log.error(err);
+                            reject(err);
+                        })
+                        .on('response', function (res) {
                             res.pipe(fs.createWriteStream(helper.getPackageFullFileName()));
                         })
                         .on('end', () => {
-                            log.info("Unzipping " + folder);
+                            this.log.info("Unzipping " + folder);
                             fs.createReadStream(helper.getPackageFullFileName())
                                 .pipe(unzip.Extract({ path: folder }))
                                 .on('close', function () {
@@ -130,34 +153,34 @@ export namespace LinterhubInstaller {
     }
 
     /**
-      * This function returns Docker version
-      * @function getDockerVersion
+      * Returns Docker version
+      * @method getDockerVersion
       * @returns {Promise<string>} Stdout of command
       */
-    export function getDockerVersion() {
-        return Linterhub.executeChildProcess("docker version --format '{{.Server.Version}}'", null).then(removeNewLine);
+    public getDockerVersion(): Promise<string> {
+        return Runner.execute("docker version --format '{{.Server.Version}}'").then(this.removeNewLine);
     }
 
     /**
-      * This function returns Dotnet version
-      * @function getDotnetVersion
+      * Returns Dotnet version
+      * @method getDotnetVersion
       * @returns {Promise<string>} Stdout of command
       */
-    export function getDotnetVersion() {
-        return Linterhub.executeChildProcess('dotnet --version', null).then(removeNewLine);
+    public getDotnetVersion(): Promise<string> {
+        return Runner.execute('dotnet --version', null).then(this.removeNewLine);
     }
 
-    function removeNewLine(out: string): string {
+    private removeNewLine(out: string): string {
         return out.replace('\n', '').replace('\r', '');
     }
 
     /**
-      * Function downloads Docker Image
-      * @function downloadDock
+      * Downloads Docker Image
+      * @method downloadDock
       * @param {string} name Name of image to download
       * @returns {Promise<string>} Stdout of command
       */
-    export function downloadDock(name: string): Promise<string> {
-        return Linterhub.executeChildProcess("docker pull " + name, null);
+    public downloadDock(name: string): Promise<string> {
+        return Runner.execute(`docker pull ${name}`).then(this.removeNewLine);
     }
 }
