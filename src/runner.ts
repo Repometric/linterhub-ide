@@ -1,5 +1,5 @@
 import * as cp from 'child_process';
-import { Status } from './types/integration';
+import { ProgressManager, systemProgressId } from './progress';
 import { ArgBuilder } from './arguments';
 import { Mode } from './types/integration';
 import * as path from 'path';
@@ -13,17 +13,17 @@ import * as fs from 'fs';
 export class Runner {
     private static cliPath: string;
     private static mode: Mode;
-    private static status: Status;
+    private static progress: ProgressManager;
 
     /**
      * Init Runner
      * @param {string} cliRoot Where to find CLI 
      * @param {Mode} mode CLI execution mode
-     * @param {Status} status 
+     * @param {ProgressManager} status 
      */
-    public static init(cliRoot: string, mode: Mode, status: Status): Promise<string> {
+    public static init(cliRoot: string, mode: Mode, progress: ProgressManager): Promise<string> {
         this.mode = mode;
-        this.status = status;
+        this.progress = progress;
         return new Promise((resolve, reject) => {
             PlatformInformation.GetCurrent().then(info => {
                 let helper = new Package(info, cliRoot, mode, null);
@@ -47,22 +47,22 @@ export class Runner {
      * @param {string?} stdin Stdin string
      * @returns {Promise<string>} Returns stdout
      */
-    public static execute(command: string, workingDirectory: string = this.cliPath, scope: string = Status.systemId, stdin: string = null): Promise<string> {
+    public static execute(command: string, workingDirectory: string = this.cliPath, scope: string = systemProgressId, stdin: string = null): Promise<string> {
         console.log(command)
         // TODO: Return ChildProcess in order to stop it when needed
         return new Promise((resolve, reject) => {
             // TODO: Use spawn and buffers.
-            Runner.status.update(scope, true);
+            Runner.progress.update(scope, true);
             let process = cp.exec(command, { cwd: workingDirectory, maxBuffer: 1024 * 1024 * 500 }, function (error, stdout, stderr) {
                 let execError = stderr.toString();
                 if (error) {
-                    reject(new Error(error.message));
+                    reject(stdout);
                 } else if (execError !== '') {
-                    reject(new Error(execError));
+                    reject(stdout);
                 } else {
                     resolve(stdout);
                 }
-                Runner.status.update(scope, false);
+                Runner.progress.update(scope, false);
             });
             if (stdin !== null) {
                 process.stdin.write(stdin);

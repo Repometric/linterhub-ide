@@ -1,3 +1,5 @@
+import { ProgressManager } from '../progress';
+
 /**
  * List of mode how to execute Linterhub Cli
  * @enum LinterhubMode
@@ -36,29 +38,11 @@ export interface Logger {
 }
 
 /**
- * Describes status provider
- * @class Status
- */
-export abstract class Status {
-	/**
-	 * Default (global) scope of status event
-	 */
-	public static systemId: string = "_system";
-	/**
-	 * Updates status 
-	 * @method update
-	 * @param {string} id Id of tab (path)
-	 * @param {boolean} progress Active or not
-	 */
-	abstract update(id: string, progress: boolean): void;
-}
-
-/**
  * Contains integration objects (for logging and changing of status)
  */
 export interface Integration {
 	logger: Logger;
-	status: Status;
+	progress: ProgressManager;
 }
 
 /**
