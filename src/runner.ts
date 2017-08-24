@@ -48,7 +48,6 @@ export class Runner {
      * @returns {Promise<string>} Returns stdout
      */
     public static execute(command: string, workingDirectory: string = this.cliPath, scope: string = systemProgressId, stdin: string = null): Promise<string> {
-        console.log(command)
         // TODO: Return ChildProcess in order to stop it when needed
         return new Promise((resolve, reject) => {
             // TODO: Use spawn and buffers.

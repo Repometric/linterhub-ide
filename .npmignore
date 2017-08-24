@@ -1,12 +1,11 @@
 node_modules
 .vscode
 src
-test
 typings
 *.log
 *.tgz
 tsconfig.json
 tslint.json
 .travis.yml
-dist/test
 .npmignore
+test_project

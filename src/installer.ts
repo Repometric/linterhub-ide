@@ -16,7 +16,7 @@ export class Package {
     /**
      * Url prefix for CLI releases on github
      */
-    readonly prefix: string = "https://github.com/Repometric/linterhub-cli/releases/download/";
+    readonly prefix: string = "https://github.com/binore/linterhub-cli/releases/download/";
     
     private version: string;
     private info: PlatformInformation;

@@ -17,6 +17,24 @@ export interface LinterhubVersion {
 }
 
 /**
+ * Result of linterhub fetch request
+ */
+export interface DetectedEngine {
+    name: string;
+    found: DetectType;
+}
+
+/**
+ * How engine detected
+ */
+export enum DetectType {
+    sourceExtension,
+    projectConfig,
+    engineConfig
+}
+
+
+/**
  * Error model
  */
 export interface Error {

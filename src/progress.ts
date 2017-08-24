@@ -10,7 +10,7 @@ export class ProgressStep {
     /**
      * Get next symbol
      */
-    next(): string {
+    public next(): string {
         return this.parts[this.index = ++this.index % this.parts.length];
     }
 }
@@ -32,7 +32,8 @@ export class Progress {
     private progressStep: ProgressStep;
     private callback: (step: string) => void;
     private inProgress: boolean = false;
-    constructor(callback: (step: string) => void, progressStep: ProgressStep = defaultProgress, interval: number = 80) {
+    
+    public constructor(callback: (step: string) => void, progressStep: ProgressStep = defaultProgress, interval: number = 80) {
         this.callback = callback;
         this.progressStep = progressStep;
         this.interval = interval;
@@ -40,7 +41,7 @@ export class Progress {
     /**
      * Start timer 
      */
-    start(): void {
+    public start(): void {
         if (this.inProgress) {
             // There is no reason to create another timer
             return;
@@ -54,7 +55,7 @@ export class Progress {
     /**
      * Disable timer
      */
-    stop(): void {
+    public stop(): void {
         if (this.inProgress) {
             clearInterval(this.id);
             this.inProgress = false;
@@ -74,14 +75,15 @@ export const systemProgressId: string = '_system';
 export class ProgressQueue {
     private updateVisibility: (visible: boolean) => void;
     private ids: Array<string> = [];
-    constructor(updateVisibility: (visible: boolean) => void) {
+    
+    public constructor(updateVisibility: (visible: boolean) => void) {
         this.updateVisibility = updateVisibility;
     }
     /**
      * Add id to queue
      * @param id progress id
      */
-    enqueue(id: string): void {
+    public enqueue(id: string): void {
         this.ids.push(id);
         this.updateVisibility(true);
     }
@@ -89,7 +91,7 @@ export class ProgressQueue {
      * Remove id from queue
      * @param id progress id
      */
-    dequeue(id: string): void {
+    public dequeue(id: string): void {
         let index = this.ids.indexOf(id);
         if (index>= 0) {
             this.ids.splice(index, 1);
@@ -101,7 +103,7 @@ export class ProgressQueue {
      * Update progress in queue
      * @param id progress id
      */
-    update(id: string): boolean {
+    public update(id: string): boolean {
         let index = this.ids.indexOf(id);
         let systemIndex = this.ids.indexOf(systemProgressId);
         let condition = index >= 0 || systemIndex >= 0;
@@ -118,17 +120,17 @@ export class ProgressManager {
     /**
      * Current progress
      */
-    progress: Progress;
+    private progress: Progress;
 
     /**
      * Progress queue
      */
-    queue: ProgressQueue;
+    private queue: ProgressQueue;
 
     /**
      * Method for updating visibility of progress
      */
-    visibility: (visible: boolean) => void;
+    public visibility: (visible: boolean) => void;
     
     constructor(visibility: (visible: boolean) => void, text: (step: string) => void) {
         this.queue = new ProgressQueue(visibility);
@@ -139,7 +141,7 @@ export class ProgressManager {
      * @param id progress id
      * @param inProgress Active or not
      */
-    update(id: string, inProgress?: boolean): void {
+    public update(id: string, inProgress?: boolean): void {
         // Progress is unknown
         if (inProgress === null) {
             if (this.queue.update(id)) {

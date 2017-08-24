@@ -1,19 +1,19 @@
 {
   "name": "@repometric/linterhub-ide",
-  "version": "0.5.1",
+  "version": "0.6.0-beta.0",
   "description": "Small package with shared classes for all linterhub extensions",
-  "main": "dist/src/index.js",
-  "typings": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "directories": {
-    "lib": "dist/src"
+    "lib": "dist"
   },
   "files": [
-    "dist/src"
+    "dist"
   ],
   "scripts": {
     "init": "npm install",
     "build": "tsc -p .",
-    "test": "mocha dist/test/*.js -R spec -C",
+    "test": "npm run build && mocha dist/test.js -R spec -C --timeout 60000",
     "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts --exclude **/platform.ts src/**/*.ts",
     "check": "npm run init && npm run build && npm run test && npm run lint",
     "pub": "npm publish --access public"
