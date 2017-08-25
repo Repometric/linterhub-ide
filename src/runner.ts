@@ -3,8 +3,8 @@ import { ProgressManager, systemProgressId } from './progress';
 import { ArgBuilder } from './arguments';
 import { Mode } from './types/integration';
 import * as path from 'path';
-import { Package } from './installer';
-import { PlatformInformation } from './platform';
+import { Package, Platform } from './installer';
+import * as si from 'systeminformation';
 import * as fs from 'fs';
 
 /**
@@ -25,8 +25,12 @@ export class Runner {
         this.mode = mode;
         this.progress = progress;
         return new Promise((resolve, reject) => {
-            PlatformInformation.GetCurrent().then(info => {
-                let helper = new Package(info, cliRoot, mode, null);
+            si.osInfo().then(info => {
+                let platform: Platform = {
+                    name: info.platform,
+                    arch: info.arch
+                };
+                let helper = new Package(platform, cliRoot, mode, null);
                 this.cliPath = path.resolve(cliRoot, 'bin', helper.getPackageName());
                 if (!fs.existsSync(this.cliPath)) {
                     reject();

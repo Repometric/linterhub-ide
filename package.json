@@ -1,6 +1,6 @@
 {
   "name": "@repometric/linterhub-ide",
-  "version": "0.6.0-beta.0",
+  "version": "0.6.0-beta.2",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -14,7 +14,7 @@
     "init": "npm install",
     "build": "tsc -p .",
     "test": "npm run build && mocha dist/test.js -R spec -C --timeout 60000",
-    "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts --exclude **/platform.ts src/**/*.ts",
+    "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts src/**/*.ts",
     "check": "npm run init && npm run build && npm run test && npm run lint",
     "pub": "npm publish --access public"
   },
@@ -31,11 +31,11 @@
     "https": "^1.0.0",
     "https-proxy-agent": "^2.0.0",
     "mkdirp": "^0.5.1",
-    "os": "^0.1.1",
     "path": "^0.12.7",
     "process": "^0.11.10",
     "request": "^2.81.0",
     "request-progress": "^3.0.0",
+    "systeminformation": "^3.26.1",
     "unzip": "^0.1.11",
     "url": "^0.11.0",
     "yauzl": "^2.8.0"

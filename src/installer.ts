@@ -1,5 +1,4 @@
 import * as path from 'path';
-import { PlatformInformation } from './platform';
 import { Linterhub } from './linterhub';
 import { Mode, Logger } from './types/integration';
 import { Runner } from './runner';
@@ -7,6 +6,12 @@ import * as fs from 'fs';
 import * as request from 'request';
 import * as progress from 'request-progress';
 import * as unzip from 'unzip';
+import * as si from 'systeminformation';
+
+export interface Platform {
+    name: string;
+    arch: string;
+};
 
 /**
   * Class that provide information for downloading, installing and activating of Linterhub
@@ -19,18 +24,18 @@ export class Package {
     readonly prefix: string = "https://github.com/binore/linterhub-cli/releases/download/";
     
     private version: string;
-    private info: PlatformInformation;
     private mode: Mode;
     private folder: string;
+    private info: Platform;
 
     /**
      * @constructor
-     * @param {PlatformInformation} info Platform Information contains data obut OS version etc
+     * @param {Platform} info Platform Information contains data obut OS version etc
      * @param {string} folder Folder contains package
      * @param {Mode} mode Execution mode of CLI
      * @param {version} version Linterhub CLI version 
      */
-    constructor(info: PlatformInformation, folder: string, mode: Mode, version: string) {
+    constructor(info: Platform, folder: string, mode: Mode, version: string) {
         this.info = info;
         this.mode = mode;
         this.folder = folder;
@@ -52,13 +57,13 @@ export class Package {
             return "dotnet";
         }
         // TODO: Improve name conversion
-        if (this.info.isMacOS()) {
+        if (this.info.name === "Darwin") {
             return "osx.10.11-x64";
         }
-        if (this.info.isWindows()) {
+        if (this.info.name === "Windows") {
             return "win10-x64";
         }
-        if (this.info.isLinux()) {
+        if (this.info.name === "Linux") {
             return "debian.8-x64";
         }
         return "unknown";
@@ -126,9 +131,13 @@ export class Installer {
             return null;
         } else {
             return new Promise((resolve, reject) => {
-                PlatformInformation.GetCurrent().then(info => {
-                    this.log.info("Platform: " + info.toString());
-                    let helper = new Package(info, folder, mode, version);
+                si.osInfo().then(info => {
+                    this.log.info("Platform: " + info.platform);
+                    let platform: Platform = {
+                        name: info.platform,
+                        arch: info.arch
+                    };
+                    let helper = new Package(platform, folder, mode, version);
                     let name = helper.getPackageFullName();
                     this.log.info("Name: " + name);
                     progress(request({
@@ -151,10 +160,16 @@ export class Installer {
                             fs.createReadStream(helper.getPackageFullFileName())
                                 .pipe(unzip.Extract({ path: folder }))
                                 .on('close', function () {
-                                    resolve(path.resolve(folder, 'bin', helper.getPackageName()));
+                                    let path_: string = path.resolve(folder, 'bin', helper.getPackageName());
+                                    fs.readdir(path_, function(err, files) {
+                                        if (err) return;
+                                        files.forEach((file) => fs.chmodSync(path.join(path_, file), '755'));
+                                    });
+                                    resolve(path_);
                                 });
                         });
-                });
+                })
+                .catch((e) => this.log.info(e));
             });
         }
     }

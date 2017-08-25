@@ -71,8 +71,9 @@ export class Linterhub {
                         .then((data: string) => {
                             this.config.enable = true;
                             this.saveConfig();
-                            Runner.init(this.config.cliRoot, this.config.mode, this.integration.progress);
-                            resolve();
+                            Runner.init(this.config.cliRoot, this.config.mode, this.integration.progress)
+                                .then(() => resolve())
+                                .catch(() => reject());
                         });
                 });
         });

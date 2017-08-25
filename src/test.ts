@@ -39,12 +39,11 @@ let integration: Integration = {
     progress: new ProgressManager((visibility) => null, (text) => null)
 };
 
-before(function(done) {
-    Linterhub.initialize(integration)
-        .then(done)
-});
-
 describe("Testing integration logic", function(){
+    before(function(done) {
+        Linterhub.initialize(integration)
+            .then(done)
+    });
     let project = path.join(__dirname, "../test-project");
     let detectedEngine: string = "jsonlint";
 

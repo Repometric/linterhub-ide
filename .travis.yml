@@ -5,7 +5,8 @@ before_install:
 - npm install -g typescript
 install:
 - npm run init
-- npm run build
+- sudo apt-get update
+- sudo apt-get install libunwind8 libicu52
 script:
 - npm run lint
 - npm run test
