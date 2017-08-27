@@ -12,7 +12,7 @@ import * as path from 'path';
   * @class Linterhub
   */
 export class Linterhub {
-    private static linterhub_version: string = "0.6.0";
+    private static linterhub_version: string = "0.6.0a";
     
     private static project: string;
 
@@ -133,7 +133,7 @@ export class Linterhub {
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                this.integration.logger.info(`Start analyze.`);
+                this.integration.logger.info(`Start analyze: ${project} ${folder} ${file}`);
                 Runner.executeCommand(args, systemProgressId, stdin) // TODO
                     .then((result: string) => {
                         let json: EngineResult[] = JSON.parse(result);
@@ -172,7 +172,6 @@ export class Linterhub {
                 Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         let json: Engine[] = JSON.parse(result);
-                        this.integration.logger.info(result);
                         resolve(json);
                     })
                     .catch((reason) => {
@@ -210,7 +209,6 @@ export class Linterhub {
                         json.forEach((x) => {
                             x.found = DetectType[x.found.toString()];
                         })
-                        this.integration.logger.info(result);
                         resolve(json);
                     })
                     .catch((reason) => {

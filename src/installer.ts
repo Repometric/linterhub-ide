@@ -180,7 +180,7 @@ export class Installer {
       * @returns {Promise<string>} Stdout of command
       */
     public getDockerVersion(): Promise<string> {
-        return Runner.execute("docker version --format '{{.Server.Version}}'").then(this.removeNewLine);
+        return Runner.execute("docker version --format '{{.Server.Version}}'").promise.then(this.removeNewLine);
     }
 
     /**
@@ -189,7 +189,7 @@ export class Installer {
       * @returns {Promise<string>} Stdout of command
       */
     public getDotnetVersion(): Promise<string> {
-        return Runner.execute('dotnet --version', null).then(this.removeNewLine);
+        return Runner.execute('dotnet --version', null).promise.then(this.removeNewLine);
     }
 
     private removeNewLine(out: string): string {
@@ -203,6 +203,6 @@ export class Installer {
       * @returns {Promise<string>} Stdout of command
       */
     public downloadDock(name: string): Promise<string> {
-        return Runner.execute(`docker pull ${name}`).then(this.removeNewLine);
+        return Runner.execute(`docker pull ${name}`).promise.then(this.removeNewLine);
     }
 }

@@ -40,12 +40,15 @@ let integration: Integration = {
 };
 
 describe("Testing integration logic", function(){
-    before(function(done) {
-        Linterhub.initialize(integration)
-            .then(done)
-    });
     let project = path.join(__dirname, "../test-project");
     let detectedEngine: string = "jsonlint";
+    before(function(done) {
+        Linterhub.initialize(integration)
+            .then(() => {
+                Linterhub.engineConfig(project, detectedEngine, false)
+                    .then(done)
+            })
+    });
 
     it("checking cli version", done => {
         Linterhub.version().then((data) => {
