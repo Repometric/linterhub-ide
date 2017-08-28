@@ -1,12 +1,22 @@
-language: node_js
+language: csharp
+dist: trusty
+sudo: required
+mono: none
+dotnet: 1.0.0-preview2.1-003177
+mono:
+    - latest
+os:
+    - linux
 node_js:
-- '6.10.1'
+    - '7'
 before_install:
-- npm install -g typescript
+    - nvm install 7.10.0
+    - nvm use 7.10.0
+    - npm install -g typescript
 install:
-- npm run init
-- sudo apt-get update
-- sudo apt-get install libunwind8 libicu52
+    - npm run init
+    - sudo apt-get update
+    - sudo apt-get install libunwind8 libicu52
 script:
-- npm run lint
-- npm run test
+    - npm run lint
+    - npm run test
