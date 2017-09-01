@@ -1,16 +1,18 @@
-import { Logger, Status, Config, Integration, Mode } from './types/integration';
+import { Logger, Config, Integration, Mode } from './types/integration';
 import { Installer } from './installer';
 import { ArgBuilder, Argument } from './arguments';
 import { Runner } from './runner';
-import { Component, LinterhubVersion, Engine, AnalyzeResult, EngineResult } from './types/linterhub';
+import { Component, LinterhubVersion, Engine, AnalyzeResult, EngineResult, DetectType, DetectedEngine } from './types/linterhub';
+import { systemProgressId } from './progress';
 import * as fs from 'fs';
+import * as path from 'path';
 
 /**
   * Represets wrapper for Linterhub cli
   * @class Linterhub
   */
 export class Linterhub {
-    private static linterhub_version: string = "0.5.2";
+    private static linterhub_version: string = "0.6.0a";
     
     private static project: string;
 
@@ -19,12 +21,23 @@ export class Linterhub {
 
     private static saveConfig()
     {
-        fs.writeFileSync('./config.json', JSON.stringify(this.config, null, 2));
+        fs.writeFileSync(path.join(__dirname, '../config.json'), JSON.stringify(this.config, null, 2));
     }
 
     private static loadConfig()
     {
-        this.config = require('../../config.json');
+        try {
+            this.config = require(path.join(__dirname, '../config.json'));
+        }
+        catch (e) {
+            this.config = {
+                mode: 0,
+                enable: false,
+                cliRoot: "",
+                proxy: null
+            };
+            this.saveConfig();
+        }
     }
 
     /**
@@ -44,7 +57,7 @@ export class Linterhub {
         this.loadConfig();
         return new Promise((resolve, reject) => {
             this.integration = integration;
-            Runner.init(this.config.cliRoot, this.config.mode, integration.status)
+            Runner.init(this.config.cliRoot, this.config.mode, integration.progress)
                 .then((cliPath: string) => {
                     resolve();
                 })
@@ -56,11 +69,11 @@ export class Linterhub {
                             reject();
                         })
                         .then((data: string) => {
-                            console.log("lel");
                             this.config.enable = true;
                             this.saveConfig();
-                            Runner.init(this.config.cliRoot, this.config.mode, this.integration.status);
-                            resolve();
+                            Runner.init(this.config.cliRoot, this.config.mode, this.integration.progress)
+                                .then(() => resolve())
+                                .catch(() => reject());
                         });
                 });
         });
@@ -102,9 +115,10 @@ export class Linterhub {
      * @param {string?} file File name
      * @param {string?} engine Engine (Can be more than one, use comma as delim)
      * @param {string?} stdin Use it to analyze buffered in memory code
+     * @param {boolean?} locally How to run engine (locally by default)
      * @returns {EngineResult[]}
      */
-    public static analyze(project: string = null, folder: string = null, file: string = null, engine: string = null, stdin: string = null): Promise<EngineResult[]> {
+    public static analyze(project: string = null, folder: string = null, file: string = null, engine: string = null, stdin: string = null, locally: boolean = true): Promise<EngineResult[]> {
         let args: ArgBuilder = new ArgBuilder();
 
         args.addRange([ 
@@ -113,21 +127,22 @@ export class Linterhub {
             { key: 'folder', value: folder },
             { key: 'file', value: file },
             { key: 'engine', value: engine },
+            { key: 'locally', value: locally.toString() },
         ]);
 
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                this.integration.logger.info(`Start analyze.`);
-                Runner.executeCommand(args, Status.systemId, stdin)
+                this.integration.logger.info(`Start analyze: ${project} ${folder} ${file}`);
+                Runner.executeCommand(args, systemProgressId, stdin) // TODO
                     .then((result: string) => {
                         let json: EngineResult[] = JSON.parse(result);
                         this.integration.logger.info(`Finish analyze.`);
                         resolve(json);
                     })
                     .catch((reason) => {
-                        this.integration.logger.error(`Catch error while analyze '${reason}'.`);
-                        reject(reason);
+                        this.integration.logger.error(`Catch error while analyze.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else
@@ -154,16 +169,51 @@ export class Linterhub {
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                Runner.executeCommand(args, Status.systemId)
+                Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         let json: Engine[] = JSON.parse(result);
-                        this.integration.logger.info(result);
                         resolve(json);
                     })
                     .catch((reason) => {
-                        this.integration.logger.error(`Error while getting catalog '${reason}'.`);
-                        this.integration.logger.error(reason.toString());
-                        reject(reason);
+                        this.integration.logger.error(`Catch error while getting catalog.`);
+                        reject(JSON.parse(reason));
+                    });
+            }
+            else
+            {
+                reject();
+            }
+        });
+    }
+
+    /**
+     * Get suitable engines for project.
+     * @param {string} project Current project
+     * @returns {DetectedEngine[]}
+     */
+    public static fetch(project: string): Promise<DetectedEngine[]> {
+        // TODO: use Error type for reject
+        let args: ArgBuilder = new ArgBuilder();
+
+        args.addRange([
+            { key: 'mode', value: `fetch` },
+            { key: 'project', value: project }
+        ]);
+
+        return new Promise((resolve, reject) => {
+            if(this.config.enable)
+            {
+                Runner.executeCommand(args, systemProgressId)
+                    .then((result: string) => {
+                        let json: DetectedEngine[] = JSON.parse(result);
+                        json.forEach((x) => {
+                            x.found = DetectType[x.found.toString()];
+                        })
+                        resolve(json);
+                    })
+                    .catch((reason) => {
+                        this.integration.logger.error(`Catch error while fetching engines.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else
@@ -178,28 +228,28 @@ export class Linterhub {
      * @param {string} project Project path
      * @param {string} name Engine name
      * @param {boolean?} activate Activate or deactivate engine for project
+     * @param {boolean?} locally How to install engine
      */
-    public static engineConfig(project: string, name: string, activate: boolean = true): Promise<{}> {
+    public static engineConfig(project: string, name: string, activate: boolean = true, locally: boolean = true): Promise<{}> {
         let args: ArgBuilder = new ArgBuilder();
 
         args.addRange([
-            { key: 'mode', value: 'activate' },
+            { key: 'mode', value: activate ? 'activate' : 'deactivate' },
             { key: 'project', value: project },
-            { key: 'activate', value: activate ? 'true' : 'false' },
-            { key: 'engine', value: name }
+            { key: 'engine', value: name },
+            { key: 'locally', value: locally.toString() }
         ]);
 
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                Runner.executeCommand(args, Status.systemId)
+                Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         resolve();
                     })
                     .catch((reason) => {
-                        this.integration.logger.error(`Error while configuring engine '${reason}'.`);
-                        this.integration.logger.error(reason.toString());
-                        reject(reason);
+                        this.integration.logger.error(`Catch error while configuring engine.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else
@@ -234,15 +284,14 @@ export class Linterhub {
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                Runner.executeCommand(args, Status.systemId)
+                Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         this.integration.logger.info(`Rule added!`);
                         resolve();
                     })
                     .catch((reason) => {
-                        this.integration.logger.error(`Error while adding ignore rule '${reason}'.`);
-                        this.integration.logger.error(reason.toString());
-                        reject(reason);
+                        this.integration.logger.error(`Catch error while adding ignore rule.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else
@@ -256,29 +305,29 @@ export class Linterhub {
      * Get the engine version.
      * @method engineVersion
      * @param {string} name The engine name.
-     * @param {boolean?} install Install engine or not
+     * @param {boolean?} locally Check local or global version of engine
      * @return {Promise<EngineVersion>}
      */
-    public static engineVersion(name: string, install: boolean = false): Promise<Component> {
+    public static engineVersion(name: string, locally: boolean = true): Promise<Component> {
         let args: ArgBuilder = new ArgBuilder();
 
         args.addRange([
-            { key: 'mode', value: install ? `engineInstall` : `engineVersion` },
-            { key: 'engine', value: name }
+            { key: 'mode', value: `version` },
+            { key: 'engine', value: name },
+            { key: 'locally', value: locally.toString() }
         ]);
 
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                Runner.executeCommand(args, Status.systemId)
+                Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         let json: Component = JSON.parse(result);
                         resolve(json);
                     })
                     .catch((reason) => {
-                        this.integration.logger.error(`Error while requesting engine version '${reason}'.`);
-                        this.integration.logger.error(reason.toString());
-                        reject(reason);
+                        this.integration.logger.error(`Catch error while requesting engine version.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else
@@ -300,15 +349,15 @@ export class Linterhub {
         return new Promise((resolve, reject) => {
             if(this.config.enable)
             {
-                Runner.executeCommand(args, Status.systemId)
+                Runner.executeCommand(args, systemProgressId)
                     .then((result: string) => {
                         resolve({
-                            version: result
+                            version: result.trim()
                         });
                     })
                     .catch((reason) => {
-                        reject(reason);
-                        this.integration.logger.error(reason.toString());
+                        this.integration.logger.error(`Catch error while getting linterhub version.`);
+                        reject(JSON.parse(reason));
                     });
             }
             else

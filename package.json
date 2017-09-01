@@ -1,20 +1,20 @@
 {
   "name": "@repometric/linterhub-ide",
-  "version": "0.5.0",
+  "version": "0.6.0-beta.4",
   "description": "Small package with shared classes for all linterhub extensions",
-  "main": "dist/src/index.js",
-  "typings": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "directories": {
-    "lib": "dist/src"
+    "lib": "dist"
   },
   "files": [
-    "dist/src"
+    "dist"
   ],
   "scripts": {
     "init": "npm install",
     "build": "tsc -p .",
-    "test": "mocha dist/test/*.js -R spec -C",
-    "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts --exclude **/platform.ts src/**/*.ts",
+    "test": "npm run build && mocha dist/test.js -R spec -C --timeout 60000",
+    "lint": "tslint -c tslint.json --type-check --project tsconfig.json --exclude **/typings/**/*.ts --exclude **/node_modules/**/*.ts src/**/*.ts",
     "check": "npm run init && npm run build && npm run test && npm run lint",
     "pub": "npm publish --access public"
   },
@@ -27,26 +27,26 @@
   "dependencies": {
     "child_process": "^1.0.2",
     "fs": "0.0.2",
-    "http-proxy-agent": "^1.0.0",
+    "http-proxy-agent": "^2.0.0",
     "https": "^1.0.0",
-    "https-proxy-agent": "^1.0.0",
+    "https-proxy-agent": "^2.0.0",
     "mkdirp": "^0.5.1",
-    "os": "^0.1.1",
     "path": "^0.12.7",
-    "process": "^0.11.9",
+    "process": "^0.11.10",
     "request": "^2.81.0",
     "request-progress": "^3.0.0",
+    "systeminformation": "^3.26.1",
     "unzip": "^0.1.11",
     "url": "^0.11.0",
-    "yauzl": "^2.7.0"
+    "yauzl": "^2.8.0"
   },
   "devDependencies": {
-    "@types/node": "^7.0.5",
+    "@types/node": "^8.0.17",
     "assert": "^1.4.1",
-    "mocha": "^3.2.0",
-    "sinon": "^2.1.0",
-    "tslint": "^5.1.0",
-    "tslint-eslint-rules": "^4.0.0",
-    "typescript": "^2.3.0"
+    "mocha": "^3.4.2",
+    "sinon": "^2.4.1",
+    "tslint": "^5.5.0",
+    "tslint-eslint-rules": "^4.1.1",
+    "typescript": "^2.4.2"
   }
 }
