@@ -1,6 +1,6 @@
 {
-  "name": "@repometric/linterhub-ide",
-  "version": "0.6.0-beta.4",
+  "name": "@repometric/linterhub-js",
+  "version": "1.0.0-alpha.1",
   "description": "Small package with shared classes for all linterhub extensions",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -22,7 +22,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/repometric/linterhub-ide"
+    "url": "https://github.com/repometric/linterhub-js"
   },
   "dependencies": {
     "child_process": "^1.0.2",
