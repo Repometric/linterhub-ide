@@ -1,6 +1,6 @@
 Linterhub IDE Package
 =====
-[![Build Status](https://travis-ci.org/repometric/linterhub-ide.svg?branch=master)](https://travis-ci.org/repometric/linterhub-js)
+[![Build Status](https://travis-ci.org/repometric/linterhub-js.svg?branch=master)](https://travis-ci.org/repometric/linterhub-js)
 
 npm package with shared classes for js-based linterhub extensions:
 * [linterhub Atom Extension](https://github.com/repometric/linterhub-atom)
